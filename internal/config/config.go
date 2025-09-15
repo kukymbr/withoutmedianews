@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/kukymbr/withoutmedianews/internal/util"
+	"github.com/kukymbr/withoutmedianews/internal/pkg/util"
 	"go.uber.org/zap/zapcore"
 )
 

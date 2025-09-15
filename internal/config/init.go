@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/caarlos0/env/v11"
-	"github.com/kukymbr/withoutmedianews/internal/util"
+	"github.com/kukymbr/withoutmedianews/internal/pkg/util"
 )
 
 func New() (Config, error) {

@@ -79,14 +79,14 @@ components:
       properties:
         id:
           $ref: "#/components/schemas/NumericID"
-        title:
+        name:
           type: string
           maxLength: 64
-          description: Tag title
+          description: Tag name
           example: Mascots
       required:
         - id
-        - title
+        - name
     NewsItem:
       type: object
       properties:
@@ -106,7 +106,8 @@ components:
           description: Main content of the news article
         author:
           type: string
-          description: Bob the Cat
+          description: Name of the article author
+          example: Bob the Cat
         category:
           $ref: "#/components/schemas/Category"
         tags:

@@ -1,20 +1,16 @@
 package app
 
 import (
-	"database/sql"
 	"fmt"
 
 	apihttp "github.com/kukymbr/withoutmedianews/internal/api/http"
 	"github.com/kukymbr/withoutmedianews/internal/config"
 	"github.com/kukymbr/withoutmedianews/internal/news"
 	"github.com/kukymbr/withoutmedianews/internal/news/repository"
+	"github.com/kukymbr/withoutmedianews/internal/pkg/dbkit"
 	"go.uber.org/zap"
 
 	_ "github.com/jackc/pgx/v5/stdlib"
-)
-
-const (
-	sqlDriver = "pgx"
 )
 
 func initContainer(config config.Config, logger *zap.Logger) *container {
@@ -38,7 +34,7 @@ func initDatabase(ctn *container) error {
 
 	ctn.logger.Debug("connecting to database", zap.String("dsn", ctn.config.Db().ToDSNDebug()))
 
-	db, err := sql.Open(sqlDriver, ctn.config.Db().ToDSN())
+	db, err := dbkit.NewDatabase(ctn.config.Db().ToDSN())
 	if err != nil {
 		return fmt.Errorf("open database: %w", err)
 	}
@@ -56,7 +52,7 @@ func initDatabase(ctn *container) error {
 }
 
 func initRepositories(ctn *container) {
-	ctn.newsRepo = repository.NewNewsRepository(ctn.db)
+	ctn.newsRepo = repository.NewNewsRepository(ctn.db, ctn.logger)
 }
 
 func initServices(ctn *container) {
@@ -73,7 +69,7 @@ type container struct {
 	config config.Config
 
 	logger *zap.Logger
-	db     *sql.DB
+	db     *dbkit.Database
 
 	newsRepo    *repository.NewsRepository
 	newsService *news.News

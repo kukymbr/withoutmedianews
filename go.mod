@@ -4,8 +4,10 @@ go 1.24.0
 
 require (
 	github.com/caarlos0/env/v11 v11.3.1
+	github.com/doug-martin/goqu/v9 v9.19.0
 	github.com/getkin/kin-openapi v0.132.0
 	github.com/jackc/pgx/v5 v5.7.6
+	github.com/lib/pq v1.10.1
 	github.com/oapi-codegen/runtime v1.1.2
 	github.com/stretchr/testify v1.10.0
 	go.uber.org/zap v1.27.0

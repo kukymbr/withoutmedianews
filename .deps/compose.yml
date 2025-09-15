@@ -15,4 +15,5 @@ services:
       start_period: 5s
     volumes:
       - ./data/postgres:/var/lib/postgresql/data
-      - ../db/schema/withoutmedianews.sql:/docker-entrypoint-initdb.d/schema.sql
+      - ../db/schema/withoutmedianews.sql:/docker-entrypoint-initdb.d/001-schema.sql
+      - ../db/testdata/testdata.sql:/docker-entrypoint-initdb.d/100-testdata.sql

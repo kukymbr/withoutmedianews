@@ -24,7 +24,7 @@ type Category struct {
 
 // NewsItem defines model for NewsItem.
 type NewsItem struct {
-	// Author Bob the Cat
+	// Author Name of the article author
 	Author string `json:"author"`
 
 	// Category Category of the news
@@ -53,8 +53,8 @@ type Tag struct {
 	// ID Numeric ID value
 	ID NumericID `json:"id"`
 
-	// Title Tag title
-	Title string `json:"title"`
+	// Name Tag name
+	Name string `json:"name"`
 }
 
 // Timestamp defines model for Timestamp.

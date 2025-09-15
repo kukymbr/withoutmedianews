@@ -6,7 +6,7 @@ import (
 
 	"github.com/kukymbr/withoutmedianews/internal/app"
 	"github.com/kukymbr/withoutmedianews/internal/config"
-	"github.com/kukymbr/withoutmedianews/internal/logkit"
+	"github.com/kukymbr/withoutmedianews/internal/pkg/logkit"
 	"go.uber.org/zap"
 )
 

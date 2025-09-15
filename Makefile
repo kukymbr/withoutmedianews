@@ -40,4 +40,4 @@ clean:
 	go clean
 
 run_dev_deps:
-	docker compose -f ./.devdocker/compose.yml up -d dev_postgres
+	docker compose -f ./.deps/compose.yml up -d dev_database
