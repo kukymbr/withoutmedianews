@@ -47,7 +47,7 @@ func Run(backgroundCtx context.Context, conf config.Config, logger *zap.Logger) 
 		BaseContext: func(_ net.Listener) context.Context {
 			return requestsCtx
 		},
-		Handler: initRouter(requestsCtx, ctn),
+		Handler: initRouter(ctn.server),
 	}
 
 	go func() {
@@ -69,10 +69,4 @@ func Run(backgroundCtx context.Context, conf config.Config, logger *zap.Logger) 
 	}
 
 	stopRequestsGracefully()
-}
-
-func initRouter(_ context.Context, _ *container) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		panic("not implemented")
-	})
 }

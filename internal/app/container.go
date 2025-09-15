@@ -4,7 +4,10 @@ import (
 	"database/sql"
 	"fmt"
 
+	apihttp "github.com/kukymbr/withoutmedianews/internal/api/http"
 	"github.com/kukymbr/withoutmedianews/internal/config"
+	"github.com/kukymbr/withoutmedianews/internal/news"
+	"github.com/kukymbr/withoutmedianews/internal/news/repository"
 	"go.uber.org/zap"
 
 	_ "github.com/jackc/pgx/v5/stdlib"
@@ -22,6 +25,10 @@ func initContainer(config config.Config, logger *zap.Logger) *container {
 	}
 
 	must(initDatabase(ctn), logger)
+
+	initRepositories(ctn)
+	initServices(ctn)
+	initServer(ctn)
 
 	return ctn
 }
@@ -43,7 +50,23 @@ func initDatabase(ctn *container) error {
 
 	ctn.db = db
 
+	ctn.finalizer.register("database", db.Close)
+
 	return nil
+}
+
+func initRepositories(ctn *container) {
+	ctn.newsRepo = repository.NewNewsRepository(ctn.db)
+}
+
+func initServices(ctn *container) {
+	ctn.newsService = news.NewNewsService(ctn.newsRepo)
+}
+
+func initServer(ctn *container) {
+	ctn.server = &apihttp.Server{
+		NewsController: apihttp.NewNewsController(ctn.newsService),
+	}
 }
 
 type container struct {
@@ -51,6 +74,10 @@ type container struct {
 
 	logger *zap.Logger
 	db     *sql.DB
+
+	newsRepo    *repository.NewsRepository
+	newsService *news.News
+	server      *apihttp.Server
 
 	finalizer *depsFinalizer
 }

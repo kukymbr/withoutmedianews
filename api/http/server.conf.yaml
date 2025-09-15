@@ -1,0 +1,15 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/oapi-codegen/oapi-codegen/HEAD/configuration-schema.json
+package: apihttp
+generate:
+  std-http-server: true
+  strict-server: true
+  models: true
+  embedded-spec: true
+output: ../../internal/api/http/server.gen.go
+output-options:
+  nullable-type: true
+  skip-prune: true
+  name-normalizer: ToCamelCaseWithInitialisms
+  prefer-skip-optional-pointer: true
+  prefer-skip-optional-pointer-with-omitzero: true
+
