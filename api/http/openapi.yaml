@@ -1,0 +1,156 @@
+openapi: 3.0.3
+
+info:
+  title: WithoutMediaNews
+  description: API providing useless news.
+  version: 0.0.1
+  contact:
+    name: "API support"
+    email: thereisnosupport@example.com
+
+servers:
+  - url: http://localhost:{port}/api/v1
+    description: Local server
+    variables:
+      port:
+        default: "8080"
+
+paths:
+
+  /news:
+    get:
+      operationId: GetNews
+      summary: Get news list
+      description: Get the list of the news you can never rely on
+      parameters:
+        - $ref: "#/components/parameters/CategoryID"
+        - $ref: "#/components/parameters/TagID"
+        - name: page
+          in: query
+          description: Number of the page
+          required: false
+          schema:
+            type: integer
+        - name: per_page
+          in: query
+          description: Count of the items per page
+          required: false
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of the news items
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  # TODO: add separated type for a list response items with no content included.
+                  $ref: "#/components/schemas/NewsItem"
+        default:
+          $ref: "#/components/responses/DefaultError"
+
+components:
+
+  schemas:
+    NumericID:
+      type: integer
+      description: Numeric ID value
+    Timestamp:
+      type: string
+      format: date-time
+    Category:
+      type: object
+      description: Category of the news
+      properties:
+        id:
+          $ref: "#/components/schemas/NumericID"
+        title:
+          type: string
+          maxLength: 255
+          description: Category title
+          example: Accidents
+      required:
+        - id
+        - title
+    Tag:
+      type: object
+      description: News item's tag
+      properties:
+        id:
+          $ref: "#/components/schemas/NumericID"
+        title:
+          type: string
+          maxLength: 64
+          description: Tag title
+          example: Mascots
+      required:
+        - id
+        - title
+    NewsItem:
+      type: object
+      properties:
+        id:
+          $ref: "#/components/schemas/NumericID"
+        title:
+          type: string
+          maxLength: 255
+          description: News title
+          example: Drunk cat occurred massive traffic jam in the LA
+        short_text:
+          type: string
+          maxLength: 1024
+          description: Preamble of the postamble
+        content:
+          type: string
+          description: Main content of the news article
+        author:
+          type: string
+          description: Bob the Cat
+        category:
+          $ref: "#/components/schemas/Category"
+        tags:
+          type: array
+          items:
+            $ref: "#/components/schemas/Tag"
+        published_at:
+          $ref: "#/components/schemas/Timestamp"
+      required:
+        - id
+        - title
+        - short_text
+        - text
+        - author
+        - category
+        - tags
+    APIError:
+      type: object
+      properties:
+        message:
+          description: Error message
+          type: string
+          example: "Bad request"
+      required:
+        - message
+
+  parameters:
+    CategoryID:
+      name: category_id
+      in: query
+      description: Filter by category ID
+      schema:
+        type: integer
+    TagID:
+      name: tag_id
+      in: query
+      description: Filter by tag ID
+      schema:
+        type: integer
+
+  responses:
+    DefaultError:
+      description: Default error response
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/APIError"
