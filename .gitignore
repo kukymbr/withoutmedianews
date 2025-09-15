@@ -1,0 +1,8 @@
+# Environments & configs
+.env
+
+# Tests generated files
+/coverage*
+
+# Binaries
+/bin/*
