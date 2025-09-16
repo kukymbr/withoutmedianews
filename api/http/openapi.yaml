@@ -49,6 +49,28 @@ paths:
                   $ref: "#/components/schemas/NewsItem"
         default:
           $ref: "#/components/responses/DefaultError"
+  /news/count:
+    get:
+      operationId: GetNewsCount
+      summary: Get news count
+      description: Get count of the news fitting the given filters
+      parameters:
+        - $ref: "#/components/parameters/CategoryID"
+        - $ref: "#/components/parameters/TagID"
+      responses:
+        "200":
+          description: News items count
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  count:
+                    type: integer
+                required:
+                  - count
+        default:
+          $ref: "#/components/responses/DefaultError"
   /news/item/{id}:
     get:
       operationId: GetNewsItem

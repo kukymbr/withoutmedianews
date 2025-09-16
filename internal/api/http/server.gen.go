@@ -100,6 +100,15 @@ type GetNewsParams struct {
 	PerPage int `form:"per_page,omitempty" json:"per_page,omitempty,omitzero"`
 }
 
+// GetNewsCountParams defines parameters for GetNewsCount.
+type GetNewsCountParams struct {
+	// CategoryID Filter by category ID
+	CategoryID CategoryID `form:"category_id,omitempty" json:"category_id,omitempty,omitzero"`
+
+	// TagID Filter by tag ID
+	TagID TagID `form:"tag_id,omitempty" json:"tag_id,omitempty,omitzero"`
+}
+
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
 	// Get categories list
@@ -108,6 +117,9 @@ type ServerInterface interface {
 	// Get news list
 	// (GET /news)
 	GetNews(w http.ResponseWriter, r *http.Request, params GetNewsParams)
+	// Get news count
+	// (GET /news/count)
+	GetNewsCount(w http.ResponseWriter, r *http.Request, params GetNewsCountParams)
 	// Get news item
 	// (GET /news/item/{id})
 	GetNewsItem(w http.ResponseWriter, r *http.Request, id NumericID)
@@ -181,6 +193,41 @@ func (siw *ServerInterfaceWrapper) GetNews(w http.ResponseWriter, r *http.Reques
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.GetNews(w, r, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetNewsCount operation middleware
+func (siw *ServerInterfaceWrapper) GetNewsCount(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params GetNewsCountParams
+
+	// ------------- Optional query parameter "category_id" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "category_id", r.URL.Query(), &params.CategoryID)
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "category_id", Err: err})
+		return
+	}
+
+	// ------------- Optional query parameter "tag_id" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "tag_id", r.URL.Query(), &params.TagID)
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "tag_id", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetNewsCount(w, r, params)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -351,6 +398,7 @@ func HandlerWithOptions(si ServerInterface, options StdHTTPServerOptions) http.H
 
 	m.HandleFunc("GET "+options.BaseURL+"/categories", wrapper.GetCategories)
 	m.HandleFunc("GET "+options.BaseURL+"/news", wrapper.GetNews)
+	m.HandleFunc("GET "+options.BaseURL+"/news/count", wrapper.GetNewsCount)
 	m.HandleFunc("GET "+options.BaseURL+"/news/item/{id}", wrapper.GetNewsItem)
 	m.HandleFunc("GET "+options.BaseURL+"/tags", wrapper.GetTags)
 
@@ -410,6 +458,37 @@ type GetNewsdefaultJSONResponse struct {
 }
 
 func (response GetNewsdefaultJSONResponse) VisitGetNewsResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+
+	return json.NewEncoder(w).Encode(response.Body)
+}
+
+type GetNewsCountRequestObject struct {
+	Params GetNewsCountParams
+}
+
+type GetNewsCountResponseObject interface {
+	VisitGetNewsCountResponse(w http.ResponseWriter) error
+}
+
+type GetNewsCount200JSONResponse struct {
+	Count int `json:"count"`
+}
+
+func (response GetNewsCount200JSONResponse) VisitGetNewsCountResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetNewsCountdefaultJSONResponse struct {
+	Body       APIError
+	StatusCode int
+}
+
+func (response GetNewsCountdefaultJSONResponse) VisitGetNewsCountResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(response.StatusCode)
 
@@ -481,6 +560,9 @@ type StrictServerInterface interface {
 	// Get news list
 	// (GET /news)
 	GetNews(ctx context.Context, request GetNewsRequestObject) (GetNewsResponseObject, error)
+	// Get news count
+	// (GET /news/count)
+	GetNewsCount(ctx context.Context, request GetNewsCountRequestObject) (GetNewsCountResponseObject, error)
 	// Get news item
 	// (GET /news/item/{id})
 	GetNewsItem(ctx context.Context, request GetNewsItemRequestObject) (GetNewsItemResponseObject, error)
@@ -568,6 +650,32 @@ func (sh *strictHandler) GetNews(w http.ResponseWriter, r *http.Request, params 
 	}
 }
 
+// GetNewsCount operation middleware
+func (sh *strictHandler) GetNewsCount(w http.ResponseWriter, r *http.Request, params GetNewsCountParams) {
+	var request GetNewsCountRequestObject
+
+	request.Params = params
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.GetNewsCount(ctx, request.(GetNewsCountRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetNewsCount")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(GetNewsCountResponseObject); ok {
+		if err := validResponse.VisitGetNewsCountResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
 // GetNewsItem operation middleware
 func (sh *strictHandler) GetNewsItem(w http.ResponseWriter, r *http.Request, id NumericID) {
 	var request GetNewsItemRequestObject
@@ -621,25 +729,26 @@ func (sh *strictHandler) GetTags(w http.ResponseWriter, r *http.Request) {
 // Base64 encoded, gzipped, json marshaled Swagger object
 var swaggerSpec = []string{
 
-	"H4sIAAAAAAAC/7xXXU/rRhP+K6t9X6k3bhw451RHviolbRUJEFKRenGE0MSe2Eu9u2Z3nUMU5b9Xs2s7",
-	"DjZJKLRXYGZ2Pp555oMNT7WstELlLE82vAIDEh0a/3UJDnNt1vMZfWVoUyMqJ7TiCf9NlA4NW6xZ2mix",
-	"+YxHXJDwqUaz5hFXIJEnvNV4EBmPuE0LlEAW3boisVAOczR8u434HeSHvTnIX3fkID/qYxtxg7bSyqJP",
-	"coZLqEv3qzHa0HeqlUPl6FeoqlKkQDHEj5YC2fQs/9/gkif8f/EOwjhIbXxxOw8Gvb/9XBqHDEmBtbH4",
-	"7JvnZL2zQFUxukLjRAhYorWQ4xAkr89accTxGWRVUva/QMYMPtVoHY9aSKwzQuU8APJUC4MZT7515u87",
-	"Rb14xNTxbdQRYui7lTC9ZK5ApvC75dGLyEV2DLebWqIR6XxG3pxwJR5wFeT9PC/SVGSeyxGX8HyFKncF",
-	"T86/fDmWtWdNMDiW+A1+t3OHclgNqF0RqrQf5Q1IbMEA40RaImt09yqjF17lEkYqE3Wdcwy3rjD0Zkfg",
-	"/ZCuQSjWSPt1auMbC+CNJavqRSlsgdkDuGMP74RE60BW9NAW2rgHh88jcd8aBLkoOzgrTc8WPuBelc+m",
-	"559HMnCQB/I5lPZoTBDeBCNgDKwPMJFYMcLCmanVXzQWmU7T2hjMmARrxQqZM7BcipQ9gmRC+WyuLt5D",
-	"1j3kIt786IjW8afBYZTbXQGHCQYRm8/YCsq6x5BunvqR/Qo0BPkPlkb2e0dBmO8vndxBzrykj/412FS/",
-	"nAA/fT4JU29sDKMdV5MNX2ojid48A4c/OiFHOofMC7XU7UaB1BMbJYiSFlWBBoVV2tZVpY37uYl/kmq5",
-	"W2cXt3PWKPDBGiFhZfRKZELlrLZYorW+nycdOxL+p3CFrt01ZgJuwkxeobHBxHQynZyRZV2hgkrwhH+a",
-	"TCefqFrgCl+ouKFQU7ccRxr0d3SeyqWwfrBAWTJYgSiBurZnwHsyfqHOs/Dwsi/dW8zn0+mb9vFJDd4f",
-	"lPtdPlzUV006lFovCa/nV/hrzro04r3jwm/4Wkqgee5B21n12HmN2K/OU6HuZvha1ywFxRSukK6Kcs20",
-	"GgO8YUH/0vs2nsZOJe5dgtvoqHY44khxME4WaLoxHq6UsTuuER26FAdXga53W81TgVVoDjpB83Dc0f1/",
-	"wcruvHgjK1U7ZT+Uld7qPh9jchJvRLY9yEwrVF72wqKDXTgbDvZRJvqsB2x8ZZf0Dn+aT7tS+uG9m+bO",
-	"1BideKn31sy7a31aiYcl/eMFbB9ezGCUitleQ/9gjvunI2W8C3//97tk9Dg73CA+5g9Ek+y1rUFCNKtx",
-	"zl7pFEoW5DzitaGtXzhXJXFckqzQ1iUbWu3bGCoRr85oNYMRhHX4X5zWvq9REzv/Ov06Jcf3278DAAD/",
-	"//1HAu24DwAA",
+	"H4sIAAAAAAAC/7xYX2/jNgz/KoI2YC9enPs3HPK07rINAdqiwArs4VAUjM046izJlehcgyDffaDkOE7t",
+	"Ju3a3dOdQ4r/fj+RVDcys7qyBg15OdnIChxoJHTh6wsQFtatZ1P+ytFnTlWkrJET+YcqCZ2Yr0XWaInZ",
+	"VCZSsfC+RreWiTSgUU7kTuNW5TKRPluiBrZI64rFyhAW6OR2m8hrKI57IyiedkRQnPSxTaRDX1njMSQ5",
+	"xQXUJf3unHX8nVlDaIj/C1VVqgw4hvTOcyCbjuUfHS7kRP6Q7kuYRqlPz65m0WDwd5hL41AgK4hdLCH7",
+	"5jhbby0wKs5W6EjFgDV6DwX2ixT0xU6cSHwAXZWc/W+QC4f3NXqSya4knpwyhYwFua+Vw1xOvrbmb1pF",
+	"O7/DjOQ2aQnR972TCLsQtERh8JuXyaPIVX6qbpe1Rqey2ZS9kaISj7iK8m6eZ1mm8sDlRGp4OEdT0FJO",
+	"3n/6dCrrwJpocCjxS/zmZ4S6jwbUtIwoHUZ5CRp3xQBHKitRNLoHyNh5UPkCA8gk7c05VbcWGD6zJ/Bh",
+	"SBegjGikXZx28Q0F8ELIqnpeKr/E/Bbo1MFrpdET6IoP+qV1dEv4MBD3lUPQ87ItZ2X52DwE3EH53fj9",
+	"x4EMCIpIPkLtT8YE8Uw0As7B+ggTmRUDLJy62vzDbVHYLKudw1xo8F6tUJCDxUJl4g60UCZkc372GrIe",
+	"VC6RzT8t0Vr+NHUY5HYLYD/BKBKzqVhBWXcY0vbT0LKfKA2X/CfPLfu1rSD298dOrqEQQdKt/gX4zD7u",
+	"AL98fFZNg7GhGu25OtnIhXWa6S1zIPyZlB64OWxemYXdTRTIArFRgyp5UC3RofLG+rqqrKNfm/hHmdX7",
+	"cXZ2NRONguyNERZWzq5Urkwhao8leh/u86hlx0T+rWhpa7rAXMFl7MkrdD6aGI/Go3ds2VZooFJyIj+M",
+	"xqMPjBbQMgCVNhRqcCtw4IL+iRSoXCofGguUpYAVqBL41nYMBE8uDNRZHg9+6UoPBvP78fhF8/hZF7zb",
+	"KA9veX9QnzfpcGqdJIJeGOFPOWvTSA+WizDha62B+3ko2t5qqF3QSMPofG6p2x6+trXIwAiDK+StolwL",
+	"a4YK3rCgu+l9HU5jr5J2NsFtclI7LnGs2Gsnc3RtG49bytAe14iObYq9rcDW+6kWqCAqdEedoLs97ejm",
+	"e7CyXS9eyEqz67Jvyspg9ZCPacblPcrKrAtAMLFQRNyb+IdCrdCIRVjj/VO0DBh+H26+FtbDadZWZ+BF",
+	"0x0yUa8/YPoot/PTx8K+Ob6N1RZg9pVuVL49CrJXpig7vOMXmSIfX2SDmAZa9yB9ItnOy44H0P6uhum8",
+	"ryS5GpNnPsU6e8SrUX/eHe6j+dejsr05mtEog7lbd//DoA5HB2C8jr///21wcPs+3gFDzG9YTba3630s",
+	"RLca5uy5zaAUUS4TWTte65ZE1SRNS5YtrafJhne3bQqVSlfvePcCp7jW8Y8tvNcFjJrY5efx5zE7vtn+",
+	"GwAA///L19eumREAAA==",
 }
 
 // GetSwagger returns the content of the embedded swagger specification file

@@ -30,24 +30,11 @@ func (r *NewsRepository) GetNewsList(
 	page domain.PaginationReq,
 ) ([]domain.NewsItem, error) {
 	page = page.GetNormalized()
-	now := time.Now().UTC().Format("2006-01-02 15:04:05")
 
-	ds := r.db.Goqu().
-		Select().
-		From(tableNameNews).
-		Where(goqu.Ex{"statusId": statusPublished}).
-		Where(goqu.L(`"publishedAt" AT TIME ZONE 'UTC' <= ?`, now)).
+	ds := r.getListDSBase(categoryID, tagID).
 		Order(goqu.C("publishedAt").Desc()).
 		Offset(page.Offset()).
 		Limit(page.PerPage)
-
-	if categoryID > 0 {
-		ds = ds.Where(goqu.Ex{"categoryId": categoryID})
-	}
-
-	if tagID > 0 {
-		ds = ds.Where(goqu.L("tagIds @> ?", []int{tagID}))
-	}
 
 	var dtos []newsItemDTO
 
@@ -86,6 +73,37 @@ func (r *NewsRepository) GetNewsItem(ctx context.Context, id int) (domain.NewsIt
 	}
 
 	return dto.ToDomain(), nil
+}
+
+func (r *NewsRepository) CountNewsItems(ctx context.Context, categoryID int, tagID int) (int, error) {
+	count, err := r.getListDSBase(categoryID, tagID).
+		ClearSelect().
+		CountContext(ctx)
+	if err != nil {
+		return 0, err
+	}
+
+	return int(count), nil
+}
+
+func (r *NewsRepository) getListDSBase(categoryID int, tagID int) *goqu.SelectDataset {
+	now := time.Now().UTC().Format("2006-01-02 15:04:05")
+
+	ds := r.db.Goqu().
+		Select().
+		From(tableNameNews).
+		Where(goqu.Ex{"statusId": statusPublished}).
+		Where(goqu.L(`"publishedAt" AT TIME ZONE 'UTC' <= ?`, now))
+
+	if categoryID > 0 {
+		ds = ds.Where(goqu.Ex{"categoryId": categoryID})
+	}
+
+	if tagID > 0 {
+		ds = ds.Where(goqu.L(`? = ANY("tagIds")`, tagID))
+	}
+
+	return ds
 }
 
 func (r *NewsRepository) enrichNewsDTOs(ctx context.Context, dtos []newsItemDTO) error {

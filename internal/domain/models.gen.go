@@ -83,3 +83,12 @@ type GetNewsParams struct {
 	// PerPage Count of the items per page
 	PerPage int `form:"per_page,omitempty" json:"per_page,omitempty,omitzero"`
 }
+
+// GetNewsCountParams defines parameters for GetNewsCount.
+type GetNewsCountParams struct {
+	// CategoryID Filter by category ID
+	CategoryID CategoryID `form:"category_id,omitempty" json:"category_id,omitempty,omitzero"`
+
+	// TagID Filter by tag ID
+	TagID TagID `form:"tag_id,omitempty" json:"tag_id,omitempty,omitzero"`
+}

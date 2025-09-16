@@ -10,6 +10,7 @@ import (
 type ReaderRepository interface {
 	GetNewsList(ctx context.Context, categoryID int, tagID int, page domain.PaginationReq) ([]domain.NewsItem, error)
 	GetNewsItem(ctx context.Context, id int) (domain.NewsItem, error)
+	CountNewsItems(ctx context.Context, categoryID int, tagID int) (int, error)
 }
 
 func NewNewsService(repo ReaderRepository) *News {
@@ -43,4 +44,13 @@ func (n *News) GetNewsItem(ctx context.Context, id int) (domain.NewsItem, error)
 	}
 
 	return item, nil
+}
+
+func (n *News) GetCount(ctx context.Context, categoryID int, tagID int) (int, error) {
+	count, err := n.repo.CountNewsItems(ctx, categoryID, tagID)
+	if err != nil {
+		return 0, err
+	}
+
+	return count, nil
 }

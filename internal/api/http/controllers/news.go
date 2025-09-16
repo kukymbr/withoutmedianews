@@ -74,3 +74,15 @@ func (c *NewsController) GetNewsItem(
 		Title:       item.Title,
 	}, nil
 }
+
+func (c *NewsController) GetNewsCount(
+	ctx context.Context,
+	request apihttp.GetNewsCountRequestObject,
+) (apihttp.GetNewsCountResponseObject, error) {
+	count, err := c.service.GetCount(ctx, request.Params.CategoryID, request.Params.TagID)
+	if err != nil {
+		return nil, err
+	}
+
+	return apihttp.GetNewsCount200JSONResponse{Count: count}, nil
+}
