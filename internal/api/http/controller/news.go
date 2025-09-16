@@ -1,33 +1,33 @@
-package controllers
+package controller
 
 import (
 	"context"
 
 	"github.com/kukymbr/withoutmedianews/internal/api/http"
+	"github.com/kukymbr/withoutmedianews/internal/db"
 	"github.com/kukymbr/withoutmedianews/internal/domain"
-	"github.com/kukymbr/withoutmedianews/internal/news"
 )
 
-func NewNewsController(service *news.News) *NewsController {
+func NewNewsController(service *domain.Service) *NewsController {
 	return &NewsController{
 		service: service,
 	}
 }
 
 type NewsController struct {
-	service *news.News
+	service *domain.Service
 }
 
-func (c *NewsController) GetNews(
+func (c *NewsController) GetNewses(
 	ctx context.Context,
-	req apihttp.GetNewsRequestObject,
-) (apihttp.GetNewsResponseObject, error) {
+	req apihttp.GetNewsesRequestObject,
+) (apihttp.GetNewsesResponseObject, error) {
 	items, err := c.service.GetList(
 		ctx,
 		req.Params.CategoryID,
 		req.Params.TagID,
 		//nolint:gosec // ignore uint conversion
-		domain.PaginationReq{
+		db.PaginationReq{
 			Page:    uint(req.Params.Page),
 			PerPage: uint(req.Params.PerPage),
 		},
@@ -36,17 +36,17 @@ func (c *NewsController) GetNews(
 		return nil, err
 	}
 
-	resp := make(apihttp.GetNews200JSONResponse, 0, len(items))
+	resp := make(apihttp.GetNewses200JSONResponse, 0, len(items))
 
 	for _, item := range items {
-		resp = append(resp, apihttp.NewsItem{
+		resp = append(resp, apihttp.News{
 			Author:      item.Author,
 			Category:    apihttp.Category(item.Category),
 			Content:     item.Content,
 			ID:          item.ID,
 			PublishedAt: item.PublishedAt,
 			ShortText:   item.ShortText,
-			Tags:        apihttp.TagsFromDomain(item.Tags),
+			Tags:        apihttp.NewTags(item.Tags),
 			Title:       item.Title,
 		})
 	}
@@ -54,23 +54,23 @@ func (c *NewsController) GetNews(
 	return resp, nil
 }
 
-func (c *NewsController) GetNewsItem(
+func (c *NewsController) GetNews(
 	ctx context.Context,
-	request apihttp.GetNewsItemRequestObject,
-) (apihttp.GetNewsItemResponseObject, error) {
-	item, err := c.service.GetNewsItem(ctx, request.ID)
+	request apihttp.GetNewsRequestObject,
+) (apihttp.GetNewsResponseObject, error) {
+	item, err := c.service.GetNews(ctx, request.ID)
 	if err != nil {
 		return nil, err
 	}
 
-	return apihttp.GetNewsItem200JSONResponse{
+	return apihttp.GetNews200JSONResponse{
 		Author:      item.Author,
 		Category:    apihttp.Category(item.Category),
 		Content:     item.Content,
 		ID:          item.ID,
 		PublishedAt: item.PublishedAt,
 		ShortText:   item.ShortText,
-		Tags:        apihttp.TagsFromDomain(item.Tags),
+		Tags:        apihttp.NewTags(item.Tags),
 		Title:       item.Title,
 	}, nil
 }

@@ -12,57 +12,57 @@ func (s *HTTPTestSuite) TestGetNews() {
 
 	tests := []struct {
 		Name   string
-		Params *GetNewsParams
-		Assert func(resp *GetNewsResponse, err error)
+		Params *GetNewsesParams
+		Assert func(resp *GetNewsesResponse, err error)
 	}{
 		{
 			Name:   "No filters",
-			Params: &GetNewsParams{},
-			Assert: func(resp *GetNewsResponse, err error) {
+			Params: &GetNewsesParams{},
+			Assert: func(resp *GetNewsesResponse, err error) {
 				s.Require().NoError(err)
 
 				s.Require().Equal(http.StatusOK, resp.StatusCode())
 				s.Require().Len(*resp.JSON200, 1)
-				s.assertNewsItem(givenNewsItem1(), (*resp.JSON200)[0])
+				s.assertNews(givenNews(), (*resp.JSON200)[0])
 			},
 		},
 		{
 			Name:   "With category filter",
-			Params: &GetNewsParams{CategoryID: 1},
-			Assert: func(resp *GetNewsResponse, err error) {
+			Params: &GetNewsesParams{CategoryID: 1},
+			Assert: func(resp *GetNewsesResponse, err error) {
 				s.Require().NoError(err)
 
 				s.Require().Equal(http.StatusOK, resp.StatusCode())
 				s.Require().Len(*resp.JSON200, 1)
-				s.assertNewsItem(givenNewsItem1(), (*resp.JSON200)[0])
+				s.assertNews(givenNews(), (*resp.JSON200)[0])
 			},
 		},
 		{
 			Name:   "With tag filter",
-			Params: &GetNewsParams{TagID: 1},
-			Assert: func(resp *GetNewsResponse, err error) {
+			Params: &GetNewsesParams{TagID: 1},
+			Assert: func(resp *GetNewsesResponse, err error) {
 				s.Require().NoError(err)
 
 				s.Require().Equal(http.StatusOK, resp.StatusCode())
 				s.Require().Len(*resp.JSON200, 1)
-				s.assertNewsItem(givenNewsItem1(), (*resp.JSON200)[0])
+				s.assertNews(givenNews(), (*resp.JSON200)[0])
 			},
 		},
 		{
 			Name:   "With category & tag filters both",
-			Params: &GetNewsParams{CategoryID: 1, TagID: 1},
-			Assert: func(resp *GetNewsResponse, err error) {
+			Params: &GetNewsesParams{CategoryID: 1, TagID: 1},
+			Assert: func(resp *GetNewsesResponse, err error) {
 				s.Require().NoError(err)
 
 				s.Require().Equal(http.StatusOK, resp.StatusCode())
 				s.Require().Len(*resp.JSON200, 1)
-				s.assertNewsItem(givenNewsItem1(), (*resp.JSON200)[0])
+				s.assertNews(givenNews(), (*resp.JSON200)[0])
 			},
 		},
 		{
 			Name:   "With unknown category filter",
-			Params: &GetNewsParams{CategoryID: 100},
-			Assert: func(resp *GetNewsResponse, err error) {
+			Params: &GetNewsesParams{CategoryID: 100},
+			Assert: func(resp *GetNewsesResponse, err error) {
 				s.Require().NoError(err)
 
 				s.Require().Equal(http.StatusOK, resp.StatusCode())
@@ -71,8 +71,8 @@ func (s *HTTPTestSuite) TestGetNews() {
 		},
 		{
 			Name:   "With unknown tag filter",
-			Params: &GetNewsParams{TagID: 100},
-			Assert: func(resp *GetNewsResponse, err error) {
+			Params: &GetNewsesParams{TagID: 100},
+			Assert: func(resp *GetNewsesResponse, err error) {
 				s.Require().NoError(err)
 
 				s.Require().Equal(http.StatusOK, resp.StatusCode())
@@ -81,8 +81,8 @@ func (s *HTTPTestSuite) TestGetNews() {
 		},
 		{
 			Name:   "With empty page",
-			Params: &GetNewsParams{Page: 100},
-			Assert: func(resp *GetNewsResponse, err error) {
+			Params: &GetNewsesParams{Page: 100},
+			Assert: func(resp *GetNewsesResponse, err error) {
 				s.Require().NoError(err)
 
 				s.Require().Equal(http.StatusOK, resp.StatusCode())
@@ -93,7 +93,7 @@ func (s *HTTPTestSuite) TestGetNews() {
 
 	for _, test := range tests {
 		s.T().Run(test.Name, func(t *testing.T) {
-			resp, err := client.GetNewsWithResponse(s.T().Context(), test.Params)
+			resp, err := client.GetNewsesWithResponse(s.T().Context(), test.Params)
 
 			test.Assert(resp, err)
 		})
@@ -106,23 +106,23 @@ func (s *HTTPTestSuite) TestGetNewsItem() {
 	tests := []struct {
 		Name   string
 		ID     NumericID
-		Assert func(resp *GetNewsItemResponse, err error)
+		Assert func(resp *GetNewsResponse, err error)
 	}{
 		{
 			Name: "Known item",
-			ID:   givenNewsItem1().ID,
-			Assert: func(resp *GetNewsItemResponse, err error) {
+			ID:   givenNews().ID,
+			Assert: func(resp *GetNewsResponse, err error) {
 				s.Require().NoError(err)
 
 				s.Require().Equal(http.StatusOK, resp.StatusCode())
 				s.Require().NotNil(resp.JSON200)
-				s.assertNewsItem(givenNewsItem1(), *resp.JSON200)
+				s.assertNews(givenNews(), *resp.JSON200)
 			},
 		},
 		{
 			Name: "Unknown item",
 			ID:   100,
-			Assert: func(resp *GetNewsItemResponse, err error) {
+			Assert: func(resp *GetNewsResponse, err error) {
 				s.Require().NoError(err)
 
 				s.Require().Equal(http.StatusNotFound, resp.StatusCode())
@@ -132,7 +132,7 @@ func (s *HTTPTestSuite) TestGetNewsItem() {
 
 	for _, test := range tests {
 		s.T().Run(test.Name, func(t *testing.T) {
-			resp, err := client.GetNewsItemWithResponse(s.T().Context(), test.ID)
+			resp, err := client.GetNewsWithResponse(s.T().Context(), test.ID)
 
 			test.Assert(resp, err)
 		})

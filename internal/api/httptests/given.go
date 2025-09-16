@@ -2,8 +2,8 @@
 
 package apihttptests
 
-func givenNewsItem1() NewsItem {
-	return NewsItem{
+func givenNews() News {
+	return News{
 		ID:        1,
 		Title:     "Drunk cat occurred massive traffic jam in the LA",
 		Author:    "Bob the Cat",

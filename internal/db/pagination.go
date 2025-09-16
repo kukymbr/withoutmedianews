@@ -1,4 +1,4 @@
-package domain
+package db
 
 const perPageDefault = 10
 

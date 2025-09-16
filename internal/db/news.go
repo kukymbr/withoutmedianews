@@ -1,4 +1,4 @@
-package repository
+package db
 
 import (
 	"context"
@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/doug-martin/goqu/v9"
-	"github.com/kukymbr/withoutmedianews/internal/domain"
 	"github.com/kukymbr/withoutmedianews/internal/pkg/dbkit"
 	"go.uber.org/zap"
 )
@@ -23,12 +22,12 @@ type NewsRepository struct {
 	logger *zap.Logger
 }
 
-func (r *NewsRepository) GetNewsList(
+func (r *NewsRepository) GetList(
 	ctx context.Context,
 	categoryID int,
 	tagID int,
-	page domain.PaginationReq,
-) ([]domain.NewsItem, error) {
+	page PaginationReq,
+) ([]News, error) {
 	page = page.GetNormalized()
 
 	ds := r.getListDSBase(categoryID, tagID).
@@ -36,7 +35,7 @@ func (r *NewsRepository) GetNewsList(
 		Offset(page.Offset()).
 		Limit(page.PerPage)
 
-	var dtos []newsItemDTO
+	var dtos []News
 
 	if err := dbkit.GoquScanStructs(ctx, ds, &dtos, r.logger); err != nil {
 		return nil, fmt.Errorf("scan news list results: %w", err)
@@ -46,38 +45,32 @@ func (r *NewsRepository) GetNewsList(
 		return nil, err
 	}
 
-	items := make([]domain.NewsItem, 0, len(dtos))
-
-	for _, dto := range dtos {
-		items = append(items, dto.ToDomain())
-	}
-
-	return items, nil
+	return dtos, nil
 }
 
-func (r *NewsRepository) GetNewsItem(ctx context.Context, id int) (domain.NewsItem, error) {
+func (r *NewsRepository) GetNews(ctx context.Context, id int) (News, error) {
 	ds := r.db.Goqu().
 		Select().
 		From(tableNameNews).
 		Where(goqu.Ex{"newsId": id}).
 		Limit(1)
 
-	var dto newsItemDTO
+	var dto News
 
 	if err := dbkit.GoquScanStruct(ctx, ds, &dto, r.logger); err != nil {
-		return domain.NewsItem{}, fmt.Errorf("fetch single news item: %w", err)
+		return News{}, fmt.Errorf("fetch single news item: %w", err)
 	}
 
-	dtos := []newsItemDTO{dto}
+	dtos := []News{dto}
 
 	if err := r.enrichNewsDTOs(ctx, dtos); err != nil {
-		return domain.NewsItem{}, err
+		return News{}, err
 	}
 
-	return dtos[0].ToDomain(), nil
+	return dtos[0], nil
 }
 
-func (r *NewsRepository) CountNewsItems(ctx context.Context, categoryID int, tagID int) (int, error) {
+func (r *NewsRepository) CountNews(ctx context.Context, categoryID int, tagID int) (int, error) {
 	count, err := r.getListDSBase(categoryID, tagID).
 		ClearSelect().
 		CountContext(ctx)
@@ -108,7 +101,7 @@ func (r *NewsRepository) getListDSBase(categoryID int, tagID int) *goqu.SelectDa
 	return ds
 }
 
-func (r *NewsRepository) enrichNewsDTOs(ctx context.Context, dtos []newsItemDTO) error {
+func (r *NewsRepository) enrichNewsDTOs(ctx context.Context, dtos []News) error {
 	if err := r.enrichWithTags(ctx, dtos); err != nil {
 		return fmt.Errorf("enrich news list results with tags: %w", err)
 	}
@@ -120,7 +113,7 @@ func (r *NewsRepository) enrichNewsDTOs(ctx context.Context, dtos []newsItemDTO)
 	return nil
 }
 
-func (r *NewsRepository) enrichWithTags(ctx context.Context, dtos []newsItemDTO) error {
+func (r *NewsRepository) enrichWithTags(ctx context.Context, dtos []News) error {
 	ids := make([]int, 0, len(dtos))
 
 	for _, dto := range dtos {
@@ -133,7 +126,7 @@ func (r *NewsRepository) enrichWithTags(ctx context.Context, dtos []newsItemDTO)
 		return nil
 	}
 
-	tagsDTOs := make([]tagDTO, 0, len(ids))
+	tagsDTOs := make([]Tag, 0, len(ids))
 
 	ds := r.db.Goqu().
 		Select().
@@ -147,7 +140,7 @@ func (r *NewsRepository) enrichWithTags(ctx context.Context, dtos []newsItemDTO)
 	tagsIndex := indexRecords(tagsDTOs)
 
 	for i, dto := range dtos {
-		dto.Tags = make([]tagDTO, 0, len(dto.TagIDs))
+		dto.Tags = make([]Tag, 0, len(dto.TagIDs))
 
 		for _, id := range dto.TagIDs {
 			if tag, ok := tagsIndex[int(id)]; ok {
@@ -161,7 +154,7 @@ func (r *NewsRepository) enrichWithTags(ctx context.Context, dtos []newsItemDTO)
 	return nil
 }
 
-func (r *NewsRepository) enrichWithCategories(ctx context.Context, dtos []newsItemDTO) error {
+func (r *NewsRepository) enrichWithCategories(ctx context.Context, dtos []News) error {
 	ids := make([]int, 0, len(dtos))
 
 	for _, dto := range dtos {
@@ -172,7 +165,7 @@ func (r *NewsRepository) enrichWithCategories(ctx context.Context, dtos []newsIt
 		return nil
 	}
 
-	categoriesDTOs := make([]categoryDTO, 0, len(ids))
+	categoriesDTOs := make([]Category, 0, len(ids))
 
 	ds := r.db.Goqu().
 		Select().

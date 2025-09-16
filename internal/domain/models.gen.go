@@ -22,8 +22,8 @@ type Category struct {
 	Title string `json:"title"`
 }
 
-// NewsItem defines model for NewsItem.
-type NewsItem struct {
+// News defines model for News.
+type News struct {
 	// Author Name of the article author
 	Author string `json:"author"`
 
@@ -69,8 +69,8 @@ type TagID = int
 // DefaultError defines model for DefaultError.
 type DefaultError = APIError
 
-// GetNewsParams defines parameters for GetNews.
-type GetNewsParams struct {
+// GetNewsesParams defines parameters for GetNewses.
+type GetNewsesParams struct {
 	// CategoryID Filter by category ID
 	CategoryID CategoryID `form:"category_id,omitempty" json:"category_id,omitempty,omitzero"`
 

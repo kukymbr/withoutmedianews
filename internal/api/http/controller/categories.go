@@ -1,20 +1,20 @@
-package controllers
+package controller
 
 import (
 	"context"
 
 	apihttp "github.com/kukymbr/withoutmedianews/internal/api/http"
-	"github.com/kukymbr/withoutmedianews/internal/news"
+	"github.com/kukymbr/withoutmedianews/internal/domain"
 )
 
-func NewCategoriesController(service *news.Dictionaries) *CategoriesController {
+func NewCategoriesController(service *domain.DictionaryService) *CategoriesController {
 	return &CategoriesController{
 		service: service,
 	}
 }
 
 type CategoriesController struct {
-	service *news.Dictionaries
+	service *domain.DictionaryService
 }
 
 func (c *CategoriesController) GetCategories(

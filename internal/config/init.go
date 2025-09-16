@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"github.com/caarlos0/env/v11"
-	"github.com/kukymbr/withoutmedianews/internal/pkg/util"
 )
 
 func New() (Config, error) {
@@ -14,10 +13,10 @@ func New() (Config, error) {
 		return Config{}, fmt.Errorf("parse config from the env: %w", err)
 	}
 
-	return configFromDTO(dto), nil
+	return newConfig(dto), nil
 }
 
-func configFromDTO(dto configDTO) Config {
+func newConfig(dto configDTO) Config {
 	conf := Config{
 		log: LoggerConfig{
 			level: dto.Logger.Level,
@@ -35,7 +34,7 @@ func configFromDTO(dto configDTO) Config {
 		},
 	}
 
-	util.MaskPasswordVars(
+	maskPasswordVars(
 		&dto.Database.Password,
 	)
 

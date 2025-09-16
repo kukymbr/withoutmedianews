@@ -75,7 +75,7 @@ func (s *HTTPTestSuite) getClient() *ClientWithResponses {
 	return client
 }
 
-func (s *HTTPTestSuite) assertNewsItem(expected NewsItem, item NewsItem) {
+func (s *HTTPTestSuite) assertNews(expected News, item News) {
 	s.T().Helper()
 
 	s.Equal(expected.ID, item.ID)

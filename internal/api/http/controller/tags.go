@@ -1,20 +1,20 @@
-package controllers
+package controller
 
 import (
 	"context"
 
 	apihttp "github.com/kukymbr/withoutmedianews/internal/api/http"
-	"github.com/kukymbr/withoutmedianews/internal/news"
+	"github.com/kukymbr/withoutmedianews/internal/domain"
 )
 
-func NewTagsController(service *news.Dictionaries) *TagsController {
+func NewTagsController(service *domain.DictionaryService) *TagsController {
 	return &TagsController{
 		service: service,
 	}
 }
 
 type TagsController struct {
-	service *news.Dictionaries
+	service *domain.DictionaryService
 }
 
 func (c *CategoriesController) GetTags(
@@ -26,5 +26,5 @@ func (c *CategoriesController) GetTags(
 		return nil, err
 	}
 
-	return apihttp.GetTags200JSONResponse(apihttp.TagsFromDomain(tags)), nil
+	return apihttp.GetTags200JSONResponse(apihttp.NewTags(tags)), nil
 }

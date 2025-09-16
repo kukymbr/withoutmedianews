@@ -1,7 +1,9 @@
-# WithoutMedia news 
+# WithoutMedia newses
 
 Hi, we are nonexisting WithoutMediaNews team, 
-and we are providing news without media files and with no any sense nor facts.
+and we are providing newses without media files and with no any sense nor facts.
+
+> The "news" word is singular, and the "newses" is plural out here. Deal with it.
 
 ## Running the app
 

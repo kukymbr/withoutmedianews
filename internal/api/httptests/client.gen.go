@@ -31,8 +31,8 @@ type Category struct {
 	Title string `json:"title"`
 }
 
-// NewsItem defines model for NewsItem.
-type NewsItem struct {
+// News defines model for News.
+type News struct {
 	// Author Name of the article author
 	Author string `json:"author"`
 
@@ -78,8 +78,8 @@ type TagID = int
 // DefaultError defines model for DefaultError.
 type DefaultError = APIError
 
-// GetNewsParams defines parameters for GetNews.
-type GetNewsParams struct {
+// GetNewsesParams defines parameters for GetNewses.
+type GetNewsesParams struct {
 	// CategoryID Filter by category ID
 	CategoryID CategoryID `form:"category_id,omitempty" json:"category_id,omitempty,omitzero"`
 
@@ -178,14 +178,14 @@ type ClientInterface interface {
 	// GetCategories request
 	GetCategories(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// GetNews request
-	GetNews(ctx context.Context, params *GetNewsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// GetNewses request
+	GetNewses(ctx context.Context, params *GetNewsesParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// GetNewsCount request
 	GetNewsCount(ctx context.Context, params *GetNewsCountParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// GetNewsItem request
-	GetNewsItem(ctx context.Context, id NumericID, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// GetNews request
+	GetNews(ctx context.Context, id NumericID, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// GetTags request
 	GetTags(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -203,8 +203,8 @@ func (c *Client) GetCategories(ctx context.Context, reqEditors ...RequestEditorF
 	return c.Client.Do(req)
 }
 
-func (c *Client) GetNews(ctx context.Context, params *GetNewsParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetNewsRequest(c.Server, params)
+func (c *Client) GetNewses(ctx context.Context, params *GetNewsesParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetNewsesRequest(c.Server, params)
 	if err != nil {
 		return nil, err
 	}
@@ -227,8 +227,8 @@ func (c *Client) GetNewsCount(ctx context.Context, params *GetNewsCountParams, r
 	return c.Client.Do(req)
 }
 
-func (c *Client) GetNewsItem(ctx context.Context, id NumericID, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetNewsItemRequest(c.Server, id)
+func (c *Client) GetNews(ctx context.Context, id NumericID, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetNewsRequest(c.Server, id)
 	if err != nil {
 		return nil, err
 	}
@@ -278,8 +278,8 @@ func NewGetCategoriesRequest(server string) (*http.Request, error) {
 	return req, nil
 }
 
-// NewGetNewsRequest generates requests for GetNews
-func NewGetNewsRequest(server string, params *GetNewsParams) (*http.Request, error) {
+// NewGetNewsesRequest generates requests for GetNewses
+func NewGetNewsesRequest(server string, params *GetNewsesParams) (*http.Request, error) {
 	var err error
 
 	serverURL, err := url.Parse(server)
@@ -416,8 +416,8 @@ func NewGetNewsCountRequest(server string, params *GetNewsCountParams) (*http.Re
 	return req, nil
 }
 
-// NewGetNewsItemRequest generates requests for GetNewsItem
-func NewGetNewsItemRequest(server string, id NumericID) (*http.Request, error) {
+// NewGetNewsRequest generates requests for GetNews
+func NewGetNewsRequest(server string, id NumericID) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -523,14 +523,14 @@ type ClientWithResponsesInterface interface {
 	// GetCategoriesWithResponse request
 	GetCategoriesWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetCategoriesResponse, error)
 
-	// GetNewsWithResponse request
-	GetNewsWithResponse(ctx context.Context, params *GetNewsParams, reqEditors ...RequestEditorFn) (*GetNewsResponse, error)
+	// GetNewsesWithResponse request
+	GetNewsesWithResponse(ctx context.Context, params *GetNewsesParams, reqEditors ...RequestEditorFn) (*GetNewsesResponse, error)
 
 	// GetNewsCountWithResponse request
 	GetNewsCountWithResponse(ctx context.Context, params *GetNewsCountParams, reqEditors ...RequestEditorFn) (*GetNewsCountResponse, error)
 
-	// GetNewsItemWithResponse request
-	GetNewsItemWithResponse(ctx context.Context, id NumericID, reqEditors ...RequestEditorFn) (*GetNewsItemResponse, error)
+	// GetNewsWithResponse request
+	GetNewsWithResponse(ctx context.Context, id NumericID, reqEditors ...RequestEditorFn) (*GetNewsResponse, error)
 
 	// GetTagsWithResponse request
 	GetTagsWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetTagsResponse, error)
@@ -559,15 +559,15 @@ func (r GetCategoriesResponse) StatusCode() int {
 	return 0
 }
 
-type GetNewsResponse struct {
+type GetNewsesResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
-	JSON200      *[]NewsItem
+	JSON200      *[]News
 	JSONDefault  *DefaultError
 }
 
 // Status returns HTTPResponse.Status
-func (r GetNewsResponse) Status() string {
+func (r GetNewsesResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -575,7 +575,7 @@ func (r GetNewsResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r GetNewsResponse) StatusCode() int {
+func (r GetNewsesResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -607,15 +607,15 @@ func (r GetNewsCountResponse) StatusCode() int {
 	return 0
 }
 
-type GetNewsItemResponse struct {
+type GetNewsResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
-	JSON200      *NewsItem
+	JSON200      *News
 	JSONDefault  *DefaultError
 }
 
 // Status returns HTTPResponse.Status
-func (r GetNewsItemResponse) Status() string {
+func (r GetNewsResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -623,7 +623,7 @@ func (r GetNewsItemResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r GetNewsItemResponse) StatusCode() int {
+func (r GetNewsResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -662,13 +662,13 @@ func (c *ClientWithResponses) GetCategoriesWithResponse(ctx context.Context, req
 	return ParseGetCategoriesResponse(rsp)
 }
 
-// GetNewsWithResponse request returning *GetNewsResponse
-func (c *ClientWithResponses) GetNewsWithResponse(ctx context.Context, params *GetNewsParams, reqEditors ...RequestEditorFn) (*GetNewsResponse, error) {
-	rsp, err := c.GetNews(ctx, params, reqEditors...)
+// GetNewsesWithResponse request returning *GetNewsesResponse
+func (c *ClientWithResponses) GetNewsesWithResponse(ctx context.Context, params *GetNewsesParams, reqEditors ...RequestEditorFn) (*GetNewsesResponse, error) {
+	rsp, err := c.GetNewses(ctx, params, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParseGetNewsResponse(rsp)
+	return ParseGetNewsesResponse(rsp)
 }
 
 // GetNewsCountWithResponse request returning *GetNewsCountResponse
@@ -680,13 +680,13 @@ func (c *ClientWithResponses) GetNewsCountWithResponse(ctx context.Context, para
 	return ParseGetNewsCountResponse(rsp)
 }
 
-// GetNewsItemWithResponse request returning *GetNewsItemResponse
-func (c *ClientWithResponses) GetNewsItemWithResponse(ctx context.Context, id NumericID, reqEditors ...RequestEditorFn) (*GetNewsItemResponse, error) {
-	rsp, err := c.GetNewsItem(ctx, id, reqEditors...)
+// GetNewsWithResponse request returning *GetNewsResponse
+func (c *ClientWithResponses) GetNewsWithResponse(ctx context.Context, id NumericID, reqEditors ...RequestEditorFn) (*GetNewsResponse, error) {
+	rsp, err := c.GetNews(ctx, id, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParseGetNewsItemResponse(rsp)
+	return ParseGetNewsResponse(rsp)
 }
 
 // GetTagsWithResponse request returning *GetTagsResponse
@@ -731,22 +731,22 @@ func ParseGetCategoriesResponse(rsp *http.Response) (*GetCategoriesResponse, err
 	return response, nil
 }
 
-// ParseGetNewsResponse parses an HTTP response from a GetNewsWithResponse call
-func ParseGetNewsResponse(rsp *http.Response) (*GetNewsResponse, error) {
+// ParseGetNewsesResponse parses an HTTP response from a GetNewsesWithResponse call
+func ParseGetNewsesResponse(rsp *http.Response) (*GetNewsesResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &GetNewsResponse{
+	response := &GetNewsesResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest []NewsItem
+		var dest []News
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -799,22 +799,22 @@ func ParseGetNewsCountResponse(rsp *http.Response) (*GetNewsCountResponse, error
 	return response, nil
 }
 
-// ParseGetNewsItemResponse parses an HTTP response from a GetNewsItemWithResponse call
-func ParseGetNewsItemResponse(rsp *http.Response) (*GetNewsItemResponse, error) {
+// ParseGetNewsResponse parses an HTTP response from a GetNewsWithResponse call
+func ParseGetNewsResponse(rsp *http.Response) (*GetNewsResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &GetNewsItemResponse{
+	response := &GetNewsResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest NewsItem
+		var dest News
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}

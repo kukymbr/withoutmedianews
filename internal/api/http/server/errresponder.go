@@ -7,6 +7,7 @@ import (
 
 	"github.com/kukymbr/withoutmedianews/internal/api/http"
 	"github.com/kukymbr/withoutmedianews/internal/domain"
+	"github.com/kukymbr/withoutmedianews/internal/pkg/dbkit"
 	"github.com/kukymbr/withoutmedianews/internal/pkg/logkit"
 	"go.uber.org/zap"
 )
@@ -64,7 +65,7 @@ func (r *ErrorResponder) respond(resp http.ResponseWriter, req *http.Request, er
 
 func getErrorCode(err error) int {
 	switch {
-	case errors.Is(err, domain.ErrNotFound):
+	case errors.Is(err, domain.ErrNotFound) || errors.Is(err, dbkit.ErrNotFound):
 		return http.StatusNotFound
 	}
 

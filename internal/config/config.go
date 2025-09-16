@@ -7,7 +7,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/kukymbr/withoutmedianews/internal/pkg/util"
 	"go.uber.org/zap/zapcore"
 )
 
@@ -111,10 +110,10 @@ func (c DbConfig) ToDSNDebug() string {
 	return c.toDSN(true)
 }
 
-func (c DbConfig) toDSN(maskPassword bool) string {
+func (c DbConfig) toDSN(maskPwd bool) string {
 	password := c.Password()
-	if maskPassword {
-		password = util.MaskPassword(password)
+	if maskPwd {
+		password = maskPassword(password)
 	}
 
 	sslMode := c.sslMode

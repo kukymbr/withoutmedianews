@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"github.com/doug-martin/goqu/v9"
-	"github.com/kukymbr/withoutmedianews/internal/domain"
 	"go.uber.org/zap"
 )
 
@@ -16,7 +15,7 @@ func GoquScanStruct(ctx context.Context, ds *goqu.SelectDataset, target any, log
 		}
 
 		if !ok {
-			return domain.ErrNotFound
+			return ErrNotFound
 		}
 
 		return nil

@@ -7,11 +7,11 @@ import (
 	"time"
 
 	"github.com/kukymbr/retrier"
-	"github.com/kukymbr/withoutmedianews/internal/api/http/controllers"
+	"github.com/kukymbr/withoutmedianews/internal/api/http/controller"
 	"github.com/kukymbr/withoutmedianews/internal/api/http/server"
 	"github.com/kukymbr/withoutmedianews/internal/config"
-	"github.com/kukymbr/withoutmedianews/internal/news"
-	"github.com/kukymbr/withoutmedianews/internal/news/repository"
+	repository2 "github.com/kukymbr/withoutmedianews/internal/db"
+	"github.com/kukymbr/withoutmedianews/internal/domain"
 	"github.com/kukymbr/withoutmedianews/internal/pkg/dbkit"
 	"go.uber.org/zap"
 
@@ -57,22 +57,22 @@ func initDatabase(ctn *Container, ctx context.Context) error {
 }
 
 func initRepositories(ctn *Container) {
-	ctn.newsRepo = repository.NewNewsRepository(ctn.db, ctn.logger)
-	ctn.dictRepo = repository.NewDictionariesRepository(ctn.db, ctn.logger)
+	ctn.newsRepo = repository2.NewNewsRepository(ctn.db, ctn.logger)
+	ctn.dictRepo = repository2.NewDictionaryRepository(ctn.db, ctn.logger)
 }
 
 func initServices(ctn *Container) {
-	ctn.newsService = news.NewNewsService(ctn.newsRepo)
-	ctn.dictService = news.NewDictionariesService(ctn.dictRepo, ctn.dictRepo)
+	ctn.newsService = domain.NewNewsService(ctn.newsRepo)
+	ctn.dictService = domain.NewDictionaryService(ctn.dictRepo)
 }
 
 func initServer(ctn *Container) {
 	ctn.errResponder = server.NewErrorResponder(ctn.logger)
 
 	ctn.server = &server.Server{
-		NewsController:       controllers.NewNewsController(ctn.newsService),
-		CategoriesController: controllers.NewCategoriesController(ctn.dictService),
-		TagsController:       controllers.NewTagsController(ctn.dictService),
+		NewsController:       controller.NewNewsController(ctn.newsService),
+		CategoriesController: controller.NewCategoriesController(ctn.dictService),
+		TagsController:       controller.NewTagsController(ctn.dictService),
 	}
 
 	ctn.router = initRouter(ctn.server, ctn.errResponder)
@@ -84,11 +84,11 @@ type Container struct {
 	logger *zap.Logger
 	db     *dbkit.Database
 
-	newsRepo *repository.NewsRepository
-	dictRepo *repository.DictionariesRepository
+	newsRepo *repository2.NewsRepository
+	dictRepo *repository2.DictionaryRepository
 
-	newsService *news.News
-	dictService *news.Dictionaries
+	newsService *domain.Service
+	dictService *domain.DictionaryService
 
 	errResponder *server.ErrorResponder
 	router       http.Handler
