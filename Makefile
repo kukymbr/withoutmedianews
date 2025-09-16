@@ -1,5 +1,6 @@
 GOLANGCI_LINT_VERSION := 2.1.6
 GO_TEST_CMD := go test -race
+GO_TEST_API_CMD := go test -tags api_test
 
 all:
 	$(MAKE) clean
@@ -31,10 +32,10 @@ lint:
 	./bin/golangci-lint run ./...
 
 test:
-	$(GO_TEST_CMD) -coverprofile=coverage_out ./...
-	go tool cover -func=coverage_out
-	go tool cover -html=coverage_out -o coverage.html
-	rm -f coverage_out
+	$(GO_TEST_CMD) ./...
+
+test_api:
+	$(GO_TEST_API_CMD) ./internal/api/httptests/...
 
 clean:
 	go clean

@@ -68,11 +68,13 @@ func (r *NewsRepository) GetNewsItem(ctx context.Context, id int) (domain.NewsIt
 		return domain.NewsItem{}, fmt.Errorf("fetch single news item: %w", err)
 	}
 
-	if err := r.enrichNewsDTOs(ctx, []newsItemDTO{dto}); err != nil {
+	dtos := []newsItemDTO{dto}
+
+	if err := r.enrichNewsDTOs(ctx, dtos); err != nil {
 		return domain.NewsItem{}, err
 	}
 
-	return dto.ToDomain(), nil
+	return dtos[0].ToDomain(), nil
 }
 
 func (r *NewsRepository) CountNewsItems(ctx context.Context, categoryID int, tagID int) (int, error) {

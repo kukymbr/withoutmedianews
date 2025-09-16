@@ -18,8 +18,8 @@ import (
 	_ "github.com/jackc/pgx/v5/stdlib"
 )
 
-func initContainer(ctx context.Context, config config.Config, logger *zap.Logger) *container {
-	ctn := &container{
+func NewContainer(ctx context.Context, config config.Config, logger *zap.Logger) *Container {
+	ctn := &Container{
 		config:    config,
 		logger:    logger,
 		finalizer: &depsFinalizer{logger: logger},
@@ -35,7 +35,7 @@ func initContainer(ctx context.Context, config config.Config, logger *zap.Logger
 	return ctn
 }
 
-func initDatabase(ctn *container, ctx context.Context) error {
+func initDatabase(ctn *Container, ctx context.Context) error {
 	var err error
 
 	ctn.logger.Debug("connecting to database", zap.String("dsn", ctn.config.Db().ToDSNDebug()))
@@ -56,17 +56,17 @@ func initDatabase(ctn *container, ctx context.Context) error {
 	return nil
 }
 
-func initRepositories(ctn *container) {
+func initRepositories(ctn *Container) {
 	ctn.newsRepo = repository.NewNewsRepository(ctn.db, ctn.logger)
 	ctn.dictRepo = repository.NewDictionariesRepository(ctn.db, ctn.logger)
 }
 
-func initServices(ctn *container) {
+func initServices(ctn *Container) {
 	ctn.newsService = news.NewNewsService(ctn.newsRepo)
 	ctn.dictService = news.NewDictionariesService(ctn.dictRepo, ctn.dictRepo)
 }
 
-func initServer(ctn *container) {
+func initServer(ctn *Container) {
 	ctn.errResponder = server.NewErrorResponder(ctn.logger)
 
 	ctn.server = &server.Server{
@@ -78,7 +78,7 @@ func initServer(ctn *container) {
 	ctn.router = initRouter(ctn.server, ctn.errResponder)
 }
 
-type container struct {
+type Container struct {
 	config config.Config
 
 	logger *zap.Logger
@@ -96,6 +96,16 @@ type container struct {
 
 	retrier   retrier.Retrier
 	finalizer *depsFinalizer
+}
+
+func (ctn *Container) GetRouter() http.Handler {
+	return ctn.router
+}
+
+func (ctn *Container) Close() error {
+	ctn.finalizer.finalize()
+
+	return nil
 }
 
 type depsFinalizer struct {

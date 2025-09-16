@@ -36,6 +36,12 @@ func (dto newsItemDTO) GetID() int {
 }
 
 func (dto newsItemDTO) ToDomain() domain.NewsItem {
+	tags := make([]domain.Tag, 0, len(dto.Tags))
+
+	for _, tag := range dto.Tags {
+		tags = append(tags, domain.Tag(tag))
+	}
+
 	return domain.NewsItem{
 		ID: dto.ID,
 
@@ -43,6 +49,9 @@ func (dto newsItemDTO) ToDomain() domain.NewsItem {
 		ShortText: dto.ShortText,
 		Content:   dto.Content,
 		Author:    dto.Author,
+
+		Category: domain.Category(dto.Category),
+		Tags:     tags,
 
 		PublishedAt: dto.PublishedAt,
 	}
