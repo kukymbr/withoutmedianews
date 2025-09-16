@@ -49,7 +49,27 @@ paths:
                   $ref: "#/components/schemas/NewsItem"
         default:
           $ref: "#/components/responses/DefaultError"
-
+  /news/item/{id}:
+    get:
+      operationId: GetNewsItem
+      summary: Get news item
+      description: Get single news item by its ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: News item ID
+          schema:
+            $ref: "#/components/schemas/NumericID"
+      responses:
+        "200":
+          description: Single news item
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NewsItem"
+        default:
+          $ref: "#/components/responses/DefaultError"
 components:
 
   schemas:

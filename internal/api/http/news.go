@@ -2,7 +2,6 @@ package apihttp
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/kukymbr/withoutmedianews/internal/domain"
 	"github.com/kukymbr/withoutmedianews/internal/news"
@@ -33,17 +32,12 @@ func (c *NewsController) GetNews(
 		},
 	)
 	if err != nil {
-		return nil, fmt.Errorf("read news list: %w", err)
+		return nil, err
 	}
 
 	resp := make(GetNews200JSONResponse, 0, len(items))
 
 	for _, item := range items {
-		tags := make([]Tag, 0, len(item.Tags))
-		for _, tag := range item.Tags {
-			tags = append(tags, Tag(tag))
-		}
-
 		resp = append(resp, NewsItem{
 			Author:      item.Author,
 			Category:    Category(item.Category),
@@ -51,10 +45,31 @@ func (c *NewsController) GetNews(
 			ID:          item.ID,
 			PublishedAt: item.PublishedAt,
 			ShortText:   item.ShortText,
-			Tags:        tags,
+			Tags:        tagsFromDomain(item.Tags),
 			Title:       item.Title,
 		})
 	}
 
 	return resp, nil
+}
+
+func (c *NewsController) GetNewsItem(
+	ctx context.Context,
+	request GetNewsItemRequestObject,
+) (GetNewsItemResponseObject, error) {
+	item, err := c.service.GetNewsItem(ctx, request.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	return GetNewsItem200JSONResponse{
+		Author:      item.Author,
+		Category:    Category(item.Category),
+		Content:     item.Content,
+		ID:          item.ID,
+		PublishedAt: item.PublishedAt,
+		ShortText:   item.ShortText,
+		Tags:        tagsFromDomain(item.Tags),
+		Title:       item.Title,
+	}, nil
 }

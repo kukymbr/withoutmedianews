@@ -47,7 +47,7 @@ func Run(backgroundCtx context.Context, conf config.Config, logger *zap.Logger) 
 		BaseContext: func(_ net.Listener) context.Context {
 			return requestsCtx
 		},
-		Handler: initRouter(ctn.server),
+		Handler: ctn.router,
 	}
 
 	go func() {

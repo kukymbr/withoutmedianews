@@ -9,6 +9,7 @@ import (
 
 type ReaderRepository interface {
 	GetNewsList(ctx context.Context, categoryID int, tagID int, page domain.PaginationReq) ([]domain.NewsItem, error)
+	GetNewsItem(ctx context.Context, id int) (domain.NewsItem, error)
 }
 
 func NewNewsService(repo ReaderRepository) *News {
@@ -33,4 +34,13 @@ func (n *News) GetList(
 	}
 
 	return items, nil
+}
+
+func (n *News) GetNewsItem(ctx context.Context, id int) (domain.NewsItem, error) {
+	item, err := n.repo.GetNewsItem(ctx, id)
+	if err != nil {
+		return domain.NewsItem{}, fmt.Errorf("read news item: %w", err)
+	}
+
+	return item, nil
 }

@@ -6,7 +6,7 @@ import (
 	apihttp "github.com/kukymbr/withoutmedianews/internal/api/http"
 )
 
-func initRouter(server apihttp.StrictServerInterface) http.Handler {
+func initRouter(server apihttp.StrictServerInterface, errResponder *apihttp.ErrorResponder) http.Handler {
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("GET /openapi.yaml", func(resp http.ResponseWriter, req *http.Request) {
@@ -17,7 +17,9 @@ func initRouter(server apihttp.StrictServerInterface) http.Handler {
 	})
 
 	return apihttp.HandlerFromMuxWithBaseURL(
-		apihttp.NewStrictHandler(server, nil),
+		apihttp.NewStrictHandlerWithOptions(server, nil, apihttp.StrictHTTPServerOptions{
+			ResponseErrorHandlerFunc: errResponder.APIError,
+		}),
 		mux,
 		"/api/v1",
 	)

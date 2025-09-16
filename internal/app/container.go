@@ -2,6 +2,7 @@ package app
 
 import (
 	"fmt"
+	"net/http"
 
 	apihttp "github.com/kukymbr/withoutmedianews/internal/api/http"
 	"github.com/kukymbr/withoutmedianews/internal/config"
@@ -60,9 +61,13 @@ func initServices(ctn *container) {
 }
 
 func initServer(ctn *container) {
+	ctn.errResponder = apihttp.NewErrorResponder(ctn.logger)
+
 	ctn.server = &apihttp.Server{
 		NewsController: apihttp.NewNewsController(ctn.newsService),
 	}
+
+	ctn.router = initRouter(ctn.server, ctn.errResponder)
 }
 
 type container struct {
@@ -73,7 +78,10 @@ type container struct {
 
 	newsRepo    *repository.NewsRepository
 	newsService *news.News
-	server      *apihttp.Server
+
+	errResponder *apihttp.ErrorResponder
+	router       http.Handler
+	server       *apihttp.Server
 
 	finalizer *depsFinalizer
 }

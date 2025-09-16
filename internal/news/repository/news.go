@@ -67,12 +67,8 @@ func (r *NewsRepository) GetNewsList(
 		return nil, fmt.Errorf("scan news list results: %w", err)
 	}
 
-	if err := r.enrichWithTags(ctx, dtos); err != nil {
-		return nil, fmt.Errorf("enrich news list results with tags: %w", err)
-	}
-
-	if err := r.enrichWithCategories(ctx, dtos); err != nil {
-		return nil, fmt.Errorf("enrich news list results with categories: %w", err)
+	if err := r.enrichNewsDTOs(ctx, dtos); err != nil {
+		return nil, err
 	}
 
 	items := make([]domain.NewsItem, 0, len(dtos))
@@ -82,6 +78,38 @@ func (r *NewsRepository) GetNewsList(
 	}
 
 	return items, nil
+}
+
+func (r *NewsRepository) GetNewsItem(ctx context.Context, id int) (domain.NewsItem, error) {
+	ds := r.db.Goqu().
+		Select().
+		From(tableNameNews).
+		Where(goqu.Ex{"newsId": id}).
+		Limit(1)
+
+	var dto newsItemDTO
+
+	if err := dbkit.GoquScanStruct(ctx, ds, &dto, r.logger); err != nil {
+		return domain.NewsItem{}, fmt.Errorf("fetch single news item: %w", err)
+	}
+
+	if err := r.enrichNewsDTOs(ctx, []newsItemDTO{dto}); err != nil {
+		return domain.NewsItem{}, err
+	}
+
+	return dto.ToDomain(), nil
+}
+
+func (r *NewsRepository) enrichNewsDTOs(ctx context.Context, dtos []newsItemDTO) error {
+	if err := r.enrichWithTags(ctx, dtos); err != nil {
+		return fmt.Errorf("enrich news list results with tags: %w", err)
+	}
+
+	if err := r.enrichWithCategories(ctx, dtos); err != nil {
+		return fmt.Errorf("enrich news list results with categories: %w", err)
+	}
+
+	return nil
 }
 
 func (r *NewsRepository) enrichWithTags(ctx context.Context, dtos []newsItemDTO) error {

@@ -105,6 +105,9 @@ type ServerInterface interface {
 	// Get news list
 	// (GET /news)
 	GetNews(w http.ResponseWriter, r *http.Request, params GetNewsParams)
+	// Get news item
+	// (GET /news/item/{id})
+	GetNewsItem(w http.ResponseWriter, r *http.Request, id NumericID)
 }
 
 // ServerInterfaceWrapper converts contexts to parameters.
@@ -158,6 +161,31 @@ func (siw *ServerInterfaceWrapper) GetNews(w http.ResponseWriter, r *http.Reques
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.GetNews(w, r, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetNewsItem operation middleware
+func (siw *ServerInterfaceWrapper) GetNewsItem(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+
+	// ------------- Path parameter "id" -------------
+	var id NumericID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", r.PathValue("id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetNewsItem(w, r, id)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -288,6 +316,7 @@ func HandlerWithOptions(si ServerInterface, options StdHTTPServerOptions) http.H
 	}
 
 	m.HandleFunc("GET "+options.BaseURL+"/news", wrapper.GetNews)
+	m.HandleFunc("GET "+options.BaseURL+"/news/item/{id}", wrapper.GetNewsItem)
 
 	return m
 }
@@ -323,11 +352,43 @@ func (response GetNewsdefaultJSONResponse) VisitGetNewsResponse(w http.ResponseW
 	return json.NewEncoder(w).Encode(response.Body)
 }
 
+type GetNewsItemRequestObject struct {
+	ID NumericID `json:"id"`
+}
+
+type GetNewsItemResponseObject interface {
+	VisitGetNewsItemResponse(w http.ResponseWriter) error
+}
+
+type GetNewsItem200JSONResponse NewsItem
+
+func (response GetNewsItem200JSONResponse) VisitGetNewsItemResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetNewsItemdefaultJSONResponse struct {
+	Body       APIError
+	StatusCode int
+}
+
+func (response GetNewsItemdefaultJSONResponse) VisitGetNewsItemResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+
+	return json.NewEncoder(w).Encode(response.Body)
+}
+
 // StrictServerInterface represents all server handlers.
 type StrictServerInterface interface {
 	// Get news list
 	// (GET /news)
 	GetNews(ctx context.Context, request GetNewsRequestObject) (GetNewsResponseObject, error)
+	// Get news item
+	// (GET /news/item/{id})
+	GetNewsItem(ctx context.Context, request GetNewsItemRequestObject) (GetNewsItemResponseObject, error)
 }
 
 type StrictHandlerFunc = strictnethttp.StrictHTTPHandlerFunc
@@ -385,25 +446,52 @@ func (sh *strictHandler) GetNews(w http.ResponseWriter, r *http.Request, params 
 	}
 }
 
+// GetNewsItem operation middleware
+func (sh *strictHandler) GetNewsItem(w http.ResponseWriter, r *http.Request, id NumericID) {
+	var request GetNewsItemRequestObject
+
+	request.ID = id
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.GetNewsItem(ctx, request.(GetNewsItemRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetNewsItem")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(GetNewsItemResponseObject); ok {
+		if err := validResponse.VisitGetNewsItemResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
 // Base64 encoded, gzipped, json marshaled Swagger object
 var swaggerSpec = []string{
 
-	"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",
+	"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",
 }
 
 // GetSwagger returns the content of the embedded swagger specification file
