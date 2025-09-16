@@ -115,13 +115,13 @@ type ServerInterface interface {
 	// (GET /categories)
 	GetCategories(w http.ResponseWriter, r *http.Request)
 	// Get news list
-	// (GET /news)
+	// (GET /newses)
 	GetNewses(w http.ResponseWriter, r *http.Request, params GetNewsesParams)
 	// Get news count
-	// (GET /news/count)
+	// (GET /newses/count)
 	GetNewsCount(w http.ResponseWriter, r *http.Request, params GetNewsCountParams)
 	// Get news item
-	// (GET /news/item/{id})
+	// (GET /newses/news/{id})
 	GetNews(w http.ResponseWriter, r *http.Request, id NumericID)
 	// Get tags list
 	// (GET /tags)
@@ -397,9 +397,9 @@ func HandlerWithOptions(si ServerInterface, options StdHTTPServerOptions) http.H
 	}
 
 	m.HandleFunc("GET "+options.BaseURL+"/categories", wrapper.GetCategories)
-	m.HandleFunc("GET "+options.BaseURL+"/news", wrapper.GetNewses)
-	m.HandleFunc("GET "+options.BaseURL+"/news/count", wrapper.GetNewsCount)
-	m.HandleFunc("GET "+options.BaseURL+"/news/item/{id}", wrapper.GetNews)
+	m.HandleFunc("GET "+options.BaseURL+"/newses", wrapper.GetNewses)
+	m.HandleFunc("GET "+options.BaseURL+"/newses/count", wrapper.GetNewsCount)
+	m.HandleFunc("GET "+options.BaseURL+"/newses/news/{id}", wrapper.GetNews)
 	m.HandleFunc("GET "+options.BaseURL+"/tags", wrapper.GetTags)
 
 	return m
@@ -558,13 +558,13 @@ type StrictServerInterface interface {
 	// (GET /categories)
 	GetCategories(ctx context.Context, request GetCategoriesRequestObject) (GetCategoriesResponseObject, error)
 	// Get news list
-	// (GET /news)
+	// (GET /newses)
 	GetNewses(ctx context.Context, request GetNewsesRequestObject) (GetNewsesResponseObject, error)
 	// Get news count
-	// (GET /news/count)
+	// (GET /newses/count)
 	GetNewsCount(ctx context.Context, request GetNewsCountRequestObject) (GetNewsCountResponseObject, error)
 	// Get news item
-	// (GET /news/item/{id})
+	// (GET /newses/news/{id})
 	GetNews(ctx context.Context, request GetNewsRequestObject) (GetNewsResponseObject, error)
 	// Get tags list
 	// (GET /tags)
@@ -729,26 +729,26 @@ func (sh *strictHandler) GetTags(w http.ResponseWriter, r *http.Request) {
 // Base64 encoded, gzipped, json marshaled Swagger object
 var swaggerSpec = []string{
 
-	"H4sIAAAAAAAC/7xX3W7jNhN9FYLfB/RGtbx/xcJXTeO2MJAEARqgF4sgGEtjialEKuTIjWH43YshJVmO",
-	"FDtp0r3adYacn3MOZ0ZbmZiyMho1OTnbygoslEho/a9zIMyM3Szm/CtFl1hVkTJazuRvqiC0YrkRSXNK",
-	"LOYykoqNDzXajYykhhLlTLYn7lQqI+mSHEtgj7Sp2Kw0YYZW7naRvIHseDSC7PlABNnJGLtIWnSV0Q59",
-	"kXNcQV3Qr9Yay78Towk18X+hqgqVAOcQ3ztOZNvz/H+LKzmT/4v3EMbB6uKz60Vw6OMd1tIEFMgHRJuL",
-	"r765zt47D8yKNRVaUiHhEp2DDIcg+fOiNUcSH6GsCq7+F0iFxYcaHcmohcSRVTqTAZCHWllM5exb5/62",
-	"O2iW95iQ3EWdIIaxW4swK0E5Co1/Oxk9yVylp3C7qku0KlnMORopKvBIqGDv13mWJCr1Wo5kCY8XqDPK",
-	"5ezjly+nqvaqCQ7HCr/icgZMQE15YOgwwysosQUCLKmkQNGcPWDFLP2RcxhhJepezSnMOlL4zl68hyld",
-	"gtKisfY5avMbS+CVdFX1slAux/QO6NTFG1WiIygrvuhyY+mO8HEk72uLUC6LDs7K8LWlT7jH8Ifpx88j",
-	"FRBkQXiEpTuZE4Q7wQlYC5sjKmRFjChwbmv9F7dEYZKkthZTUYJzao2CLKxWKhH3UAqlfTUXZ28R6gFy",
-	"kWz+6YTW6afBYVTXHYHDAoNJLOZiDUXdU0jXS327fgYahvwHx+36rW0g9PanQW4gE97SR/8SXGKevv6f",
-	"Pr8IU+9sDKO9VmdbuTK2ZHnLFAh/JFWOvBx2r/TKtNMEEi9sLEEVPKRytKicNq6uKmPp5yb/SWLK/Sg7",
-	"u16I5oAcjBA2VtasVap0JmqHBTrn3/OkU8dM/qkoNzVdYqrgKvTjNVoXXEwn08kH9mwq1FApOZOfJtPJ",
-	"J2YLKPdExY2EGt4yHHmgvyN5KRfK+cYCRSFgDaoAfrU9Bz6S9cN0kYaL533rwVD+OJ2+aha/6IH3G+Xh",
-	"Kx8O6YumHC6tV4Q/58f3c8G6MuKDxcJP97osgfu5B23v1WPnT8S6mTMvgrrr4RtTiwS00LhG3iiKjTB6",
-	"DHBWgQe7v+d9Gy9kfyTu7YG76OTpsMLxwUFDWaLtGnnYUca2uMZ0bE8c7ASm3s81LwZRoT0aBO3d6UC3",
-	"30OX/m2+UpO67bHvqknv9VCNccLQHtVk0gffu1gpIu5M/IdMrVGLlV/g3XOi9Px9H12+ldLDWdahM/It",
-	"0x8x4dxwvAxZ7qanC8C+O7+N145gjhVvVbo7SrJTOit6uuNvMUUufIuNcjqk85lCe99zPHr2b9TP5T2K",
-	"ZGuMXvgB1tsg3sz46bc7ZPGPJ3C9O4vBKZPYLrn/Yjz7qyP03YS///etb3TnPt75fM7viCb7a3seG9Gu",
-	"x/V6YRIoRLDLSNaWl7mcqJrFccG23DiabXlj28VQqXj9gTcusIqxDp+PvM15jprc5dfp1ykHvt39EwAA",
-	"//9gYmxTixEAAA==",
+	"H4sIAAAAAAAC/7xXXW/rNg/+K4LeF9iNF+d8DQe5WtdsQ4C2KLACuzgoCsZmbHW25Ep01iDIfx8o2Y5T",
+	"u0m7dueqdUjx63lEUluZmLIyGjU5OdvKCiyUSGj91zkQZsZuFnP+StElVlWkjJYz+ZsqCK1YbkTSaInF",
+	"XEZSsfChRruRkdRQopzJVuNOpTKSLsmxBLZIm4rFShNmaOVuF8kbyI57I8ied0SQnfSxi6RFVxnt0Cc5",
+	"xxXUBf1qrbH8nRhNqIn/haoqVAIcQ3zvOJBtz/L/La7kTP4v3pcwDlIXn10vgkHv7zCXxqFAVhBtLD77",
+	"5jhb7ywwKtZUaEmFgEt0DjIcFsnri1YcSXyEsio4+18gFRYfanQko7YkjqzSmQwFeaiVxVTOvnXmbztF",
+	"s7zHhOQu6ggx9N1KhFkJylFo/NvJ6EnkKj1Vt6u6RKuSxZy9kaICj7gK8n6eZ0miUs/lSJbweIE6o1zO",
+	"Pn75ciprz5pgcCzxK05ngATUlAeEDiO8ghLbQoAllRQoGt0DVMzSq5zDCCpRd2tO1awDhc/syXsY0iUo",
+	"LRppH6M2vrEAXglXVS8L5XJM74BOHbxRJTqCsuKDLjeW7ggfR+K+tgjlsujKWRk+tvQB9xD+MP34eSQD",
+	"giwQj7B0J2OCcCYYAWthc4SFzIgRBs5trf/ilihMktTWYipKcE6tUZCF1Uol4h5KobTP5uLsLUQ9qFwk",
+	"mz8d0Tr+NHUY5XUH4DDBIBKLuVhDUfcY0vVS366fKQ2X/AfH7fqtbSD09qdObiATXtKv/iW4xDy9/T99",
+	"flFNvbGxGu25OtvKlbEl01umQPgjqXLk5rB5pVemnSaQeGJjCargIZWjReW0cXVVGUs/N/FPElPuR9nZ",
+	"9UI0CnIwQlhYWbNWqdKZqB0W6Jy/z5OOHTP5p6Lc1HSJqYKr0I/XaF0wMZ1MJx/YsqlQQ6XkTH6aTCef",
+	"GC2g3AMVNxRqcMtw5IL+juSpXCjnGwsUhYA1qAL41vYMeE/WD9NFGg6e96UHQ/njdPqqWfyiC95vlIe3",
+	"fDikL5p0OLVeEl7Pj+/nnHVpxAeLhZ/udVkC93NftL1VXzuvETOEryh218U3phYJaKFxjbxTFBth9FjJ",
+	"r4KD6GDT+zaeyl4l7m2Cu+ikdljiWHHQUpZou1YetpSxPa4RHdsUB1uBqfeTzdNBVGiPOkF7d9rR7fdg",
+	"pr+dr2Slbrvsu7LSW33Kxzjh4h5lZdIvvzeyUkTcnfiHTK1Ri5Vf4t1ztPQIfh9mvhXUw3nWVWfkPdMf",
+	"M0FvOGKGOHcT1IXCvjvCjdUexPwn3qp0dxRmp3RW9LjHLzJFLrzIRlEdAvpMqr1XHQ+g/T3103lfR7I1",
+	"Ri98hvX2iDdjfvr+DnH840m53h3HYJRhbFfdfzGk/dER+G7C7/99+xvdvI93Px/zO1aT7bV9j4Vo1+N8",
+	"vTAJFCLIZSRryytdTlTN4rhgWW4czba8t+1iqFS8/sB7F1jFtQ6PSN7pPEZN7PLr9OuUHd/u/gkAAP//",
+	"k51vL5ERAAA=",
 }
 
 // GetSwagger returns the content of the embedded swagger specification file

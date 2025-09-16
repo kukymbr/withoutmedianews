@@ -17,7 +17,7 @@ servers:
 
 paths:
 
-  /news:
+  /newses:
     get:
       operationId: GetNewses
       summary: Get news list
@@ -49,7 +49,7 @@ paths:
                   $ref: "#/components/schemas/News"
         default:
           $ref: "#/components/responses/DefaultError"
-  /news/count:
+  /newses/count:
     get:
       operationId: GetNewsCount
       summary: Get news count
@@ -71,7 +71,7 @@ paths:
                   - count
         default:
           $ref: "#/components/responses/DefaultError"
-  /news/item/{id}:
+  /newses/news/{id}:
     get:
       operationId: GetNews
       summary: Get news item

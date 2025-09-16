@@ -287,7 +287,7 @@ func NewGetNewsesRequest(server string, params *GetNewsesParams) (*http.Request,
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/news")
+	operationPath := fmt.Sprintf("/newses")
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -368,7 +368,7 @@ func NewGetNewsCountRequest(server string, params *GetNewsCountParams) (*http.Re
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/news/count")
+	operationPath := fmt.Sprintf("/newses/count")
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -432,7 +432,7 @@ func NewGetNewsRequest(server string, id NumericID) (*http.Request, error) {
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/news/item/%s", pathParam0)
+	operationPath := fmt.Sprintf("/newses/news/%s", pathParam0)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
