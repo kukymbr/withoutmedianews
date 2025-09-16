@@ -4,9 +4,10 @@ import (
 	"net/http"
 
 	apihttp "github.com/kukymbr/withoutmedianews/internal/api/http"
+	"github.com/kukymbr/withoutmedianews/internal/api/http/server"
 )
 
-func initRouter(server apihttp.StrictServerInterface, errResponder *apihttp.ErrorResponder) http.Handler {
+func initRouter(server apihttp.StrictServerInterface, errResponder *server.ErrorResponder) http.Handler {
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("GET /openapi.yaml", func(resp http.ResponseWriter, req *http.Request) {

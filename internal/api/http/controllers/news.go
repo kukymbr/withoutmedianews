@@ -1,8 +1,9 @@
-package apihttp
+package controllers
 
 import (
 	"context"
 
+	"github.com/kukymbr/withoutmedianews/internal/api/http"
 	"github.com/kukymbr/withoutmedianews/internal/domain"
 	"github.com/kukymbr/withoutmedianews/internal/news"
 )
@@ -19,8 +20,8 @@ type NewsController struct {
 
 func (c *NewsController) GetNews(
 	ctx context.Context,
-	req GetNewsRequestObject,
-) (GetNewsResponseObject, error) {
+	req apihttp.GetNewsRequestObject,
+) (apihttp.GetNewsResponseObject, error) {
 	items, err := c.service.GetList(
 		ctx,
 		req.Params.CategoryID,
@@ -35,17 +36,17 @@ func (c *NewsController) GetNews(
 		return nil, err
 	}
 
-	resp := make(GetNews200JSONResponse, 0, len(items))
+	resp := make(apihttp.GetNews200JSONResponse, 0, len(items))
 
 	for _, item := range items {
-		resp = append(resp, NewsItem{
+		resp = append(resp, apihttp.NewsItem{
 			Author:      item.Author,
-			Category:    Category(item.Category),
+			Category:    apihttp.Category(item.Category),
 			Content:     item.Content,
 			ID:          item.ID,
 			PublishedAt: item.PublishedAt,
 			ShortText:   item.ShortText,
-			Tags:        tagsFromDomain(item.Tags),
+			Tags:        apihttp.TagsFromDomain(item.Tags),
 			Title:       item.Title,
 		})
 	}
@@ -55,21 +56,21 @@ func (c *NewsController) GetNews(
 
 func (c *NewsController) GetNewsItem(
 	ctx context.Context,
-	request GetNewsItemRequestObject,
-) (GetNewsItemResponseObject, error) {
+	request apihttp.GetNewsItemRequestObject,
+) (apihttp.GetNewsItemResponseObject, error) {
 	item, err := c.service.GetNewsItem(ctx, request.ID)
 	if err != nil {
 		return nil, err
 	}
 
-	return GetNewsItem200JSONResponse{
+	return apihttp.GetNewsItem200JSONResponse{
 		Author:      item.Author,
-		Category:    Category(item.Category),
+		Category:    apihttp.Category(item.Category),
 		Content:     item.Content,
 		ID:          item.ID,
 		PublishedAt: item.PublishedAt,
 		ShortText:   item.ShortText,
-		Tags:        tagsFromDomain(item.Tags),
+		Tags:        apihttp.TagsFromDomain(item.Tags),
 		Title:       item.Title,
 	}, nil
 }

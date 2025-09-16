@@ -102,12 +102,18 @@ type GetNewsParams struct {
 
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
+	// Get categories list
+	// (GET /categories)
+	GetCategories(w http.ResponseWriter, r *http.Request)
 	// Get news list
 	// (GET /news)
 	GetNews(w http.ResponseWriter, r *http.Request, params GetNewsParams)
 	// Get news item
 	// (GET /news/item/{id})
 	GetNewsItem(w http.ResponseWriter, r *http.Request, id NumericID)
+	// Get tags list
+	// (GET /tags)
+	GetTags(w http.ResponseWriter, r *http.Request)
 }
 
 // ServerInterfaceWrapper converts contexts to parameters.
@@ -118,6 +124,20 @@ type ServerInterfaceWrapper struct {
 }
 
 type MiddlewareFunc func(http.Handler) http.Handler
+
+// GetCategories operation middleware
+func (siw *ServerInterfaceWrapper) GetCategories(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetCategories(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
 
 // GetNews operation middleware
 func (siw *ServerInterfaceWrapper) GetNews(w http.ResponseWriter, r *http.Request) {
@@ -186,6 +206,20 @@ func (siw *ServerInterfaceWrapper) GetNewsItem(w http.ResponseWriter, r *http.Re
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.GetNewsItem(w, r, id)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetTags operation middleware
+func (siw *ServerInterfaceWrapper) GetTags(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetTags(w, r)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -315,13 +349,43 @@ func HandlerWithOptions(si ServerInterface, options StdHTTPServerOptions) http.H
 		ErrorHandlerFunc:   options.ErrorHandlerFunc,
 	}
 
+	m.HandleFunc("GET "+options.BaseURL+"/categories", wrapper.GetCategories)
 	m.HandleFunc("GET "+options.BaseURL+"/news", wrapper.GetNews)
 	m.HandleFunc("GET "+options.BaseURL+"/news/item/{id}", wrapper.GetNewsItem)
+	m.HandleFunc("GET "+options.BaseURL+"/tags", wrapper.GetTags)
 
 	return m
 }
 
 type DefaultErrorJSONResponse APIError
+
+type GetCategoriesRequestObject struct {
+}
+
+type GetCategoriesResponseObject interface {
+	VisitGetCategoriesResponse(w http.ResponseWriter) error
+}
+
+type GetCategories200JSONResponse []Category
+
+func (response GetCategories200JSONResponse) VisitGetCategoriesResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetCategoriesdefaultJSONResponse struct {
+	Body       APIError
+	StatusCode int
+}
+
+func (response GetCategoriesdefaultJSONResponse) VisitGetCategoriesResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+
+	return json.NewEncoder(w).Encode(response.Body)
+}
 
 type GetNewsRequestObject struct {
 	Params GetNewsParams
@@ -381,14 +445,48 @@ func (response GetNewsItemdefaultJSONResponse) VisitGetNewsItemResponse(w http.R
 	return json.NewEncoder(w).Encode(response.Body)
 }
 
+type GetTagsRequestObject struct {
+}
+
+type GetTagsResponseObject interface {
+	VisitGetTagsResponse(w http.ResponseWriter) error
+}
+
+type GetTags200JSONResponse []Tag
+
+func (response GetTags200JSONResponse) VisitGetTagsResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetTagsdefaultJSONResponse struct {
+	Body       APIError
+	StatusCode int
+}
+
+func (response GetTagsdefaultJSONResponse) VisitGetTagsResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+
+	return json.NewEncoder(w).Encode(response.Body)
+}
+
 // StrictServerInterface represents all server handlers.
 type StrictServerInterface interface {
+	// Get categories list
+	// (GET /categories)
+	GetCategories(ctx context.Context, request GetCategoriesRequestObject) (GetCategoriesResponseObject, error)
 	// Get news list
 	// (GET /news)
 	GetNews(ctx context.Context, request GetNewsRequestObject) (GetNewsResponseObject, error)
 	// Get news item
 	// (GET /news/item/{id})
 	GetNewsItem(ctx context.Context, request GetNewsItemRequestObject) (GetNewsItemResponseObject, error)
+	// Get tags list
+	// (GET /tags)
+	GetTags(ctx context.Context, request GetTagsRequestObject) (GetTagsResponseObject, error)
 }
 
 type StrictHandlerFunc = strictnethttp.StrictHTTPHandlerFunc
@@ -418,6 +516,30 @@ type strictHandler struct {
 	ssi         StrictServerInterface
 	middlewares []StrictMiddlewareFunc
 	options     StrictHTTPServerOptions
+}
+
+// GetCategories operation middleware
+func (sh *strictHandler) GetCategories(w http.ResponseWriter, r *http.Request) {
+	var request GetCategoriesRequestObject
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.GetCategories(ctx, request.(GetCategoriesRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetCategories")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(GetCategoriesResponseObject); ok {
+		if err := validResponse.VisitGetCategoriesResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
 }
 
 // GetNews operation middleware
@@ -472,26 +594,52 @@ func (sh *strictHandler) GetNewsItem(w http.ResponseWriter, r *http.Request, id 
 	}
 }
 
+// GetTags operation middleware
+func (sh *strictHandler) GetTags(w http.ResponseWriter, r *http.Request) {
+	var request GetTagsRequestObject
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.GetTags(ctx, request.(GetTagsRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetTags")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(GetTagsResponseObject); ok {
+		if err := validResponse.VisitGetTagsResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
 // Base64 encoded, gzipped, json marshaled Swagger object
 var swaggerSpec = []string{
 
-	"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",
+	"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",
+	"//1HAu24DwAA",
 }
 
 // GetSwagger returns the content of the embedded swagger specification file

@@ -4,7 +4,8 @@ import (
 	"fmt"
 	"net/http"
 
-	apihttp "github.com/kukymbr/withoutmedianews/internal/api/http"
+	"github.com/kukymbr/withoutmedianews/internal/api/http/controllers"
+	"github.com/kukymbr/withoutmedianews/internal/api/http/server"
 	"github.com/kukymbr/withoutmedianews/internal/config"
 	"github.com/kukymbr/withoutmedianews/internal/news"
 	"github.com/kukymbr/withoutmedianews/internal/news/repository"
@@ -54,17 +55,21 @@ func initDatabase(ctn *container) error {
 
 func initRepositories(ctn *container) {
 	ctn.newsRepo = repository.NewNewsRepository(ctn.db, ctn.logger)
+	ctn.dictRepo = repository.NewDictionariesRepository(ctn.db, ctn.logger)
 }
 
 func initServices(ctn *container) {
 	ctn.newsService = news.NewNewsService(ctn.newsRepo)
+	ctn.dictService = news.NewDictionariesService(ctn.dictRepo, ctn.dictRepo)
 }
 
 func initServer(ctn *container) {
-	ctn.errResponder = apihttp.NewErrorResponder(ctn.logger)
+	ctn.errResponder = server.NewErrorResponder(ctn.logger)
 
-	ctn.server = &apihttp.Server{
-		NewsController: apihttp.NewNewsController(ctn.newsService),
+	ctn.server = &server.Server{
+		NewsController:       controllers.NewNewsController(ctn.newsService),
+		CategoriesController: controllers.NewCategoriesController(ctn.dictService),
+		TagsController:       controllers.NewTagsController(ctn.dictService),
 	}
 
 	ctn.router = initRouter(ctn.server, ctn.errResponder)
@@ -76,12 +81,15 @@ type container struct {
 	logger *zap.Logger
 	db     *dbkit.Database
 
-	newsRepo    *repository.NewsRepository
-	newsService *news.News
+	newsRepo *repository.NewsRepository
+	dictRepo *repository.DictionariesRepository
 
-	errResponder *apihttp.ErrorResponder
+	newsService *news.News
+	dictService *news.Dictionaries
+
+	errResponder *server.ErrorResponder
 	router       http.Handler
-	server       *apihttp.Server
+	server       *server.Server
 
 	finalizer *depsFinalizer
 }

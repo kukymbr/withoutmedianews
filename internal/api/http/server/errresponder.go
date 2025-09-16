@@ -1,10 +1,11 @@
-package apihttp
+package server
 
 import (
 	"encoding/json"
 	"errors"
 	"net/http"
 
+	"github.com/kukymbr/withoutmedianews/internal/api/http"
 	"github.com/kukymbr/withoutmedianews/internal/domain"
 	"github.com/kukymbr/withoutmedianews/internal/pkg/logkit"
 	"go.uber.org/zap"
@@ -21,7 +22,7 @@ type ErrorResponder struct {
 }
 
 func (r *ErrorResponder) APIError(resp http.ResponseWriter, req *http.Request, err error) {
-	errData := APIError{
+	errData := apihttp.APIError{
 		Message: err.Error(),
 	}
 

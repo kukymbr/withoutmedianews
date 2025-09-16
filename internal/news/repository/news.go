@@ -11,18 +11,6 @@ import (
 	"go.uber.org/zap"
 )
 
-const (
-	tableNameNews       = "news"
-	tableNameTags       = "tags"
-	tableNameCategories = "categories"
-)
-
-const (
-	statusPublished = 1
-	statusDraft     = 2
-	statusDeleted   = 3
-)
-
 func NewNewsRepository(db *dbkit.Database, logger *zap.Logger) *NewsRepository {
 	return &NewsRepository{
 		db:     db,
