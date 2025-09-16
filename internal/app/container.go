@@ -1,9 +1,12 @@
 package app
 
 import (
+	"context"
 	"fmt"
 	"net/http"
+	"time"
 
+	"github.com/kukymbr/retrier"
 	"github.com/kukymbr/withoutmedianews/internal/api/http/controllers"
 	"github.com/kukymbr/withoutmedianews/internal/api/http/server"
 	"github.com/kukymbr/withoutmedianews/internal/config"
@@ -15,14 +18,15 @@ import (
 	_ "github.com/jackc/pgx/v5/stdlib"
 )
 
-func initContainer(config config.Config, logger *zap.Logger) *container {
+func initContainer(ctx context.Context, config config.Config, logger *zap.Logger) *container {
 	ctn := &container{
 		config:    config,
 		logger:    logger,
 		finalizer: &depsFinalizer{logger: logger},
+		retrier:   retrier.NewLinear(5, 10*time.Second),
 	}
 
-	must(initDatabase(ctn), logger)
+	must(initDatabase(ctn, ctx), logger)
 
 	initRepositories(ctn)
 	initServices(ctn)
@@ -31,7 +35,7 @@ func initContainer(config config.Config, logger *zap.Logger) *container {
 	return ctn
 }
 
-func initDatabase(ctn *container) error {
+func initDatabase(ctn *container, ctx context.Context) error {
 	var err error
 
 	ctn.logger.Debug("connecting to database", zap.String("dsn", ctn.config.Db().ToDSNDebug()))
@@ -41,8 +45,7 @@ func initDatabase(ctn *container) error {
 		return fmt.Errorf("open database: %w", err)
 	}
 
-	// TODO: add a retrier or something
-	if err := db.Ping(); err != nil {
+	if err := ctn.retrier.Do(ctx, db.Ping); err != nil {
 		return fmt.Errorf("ping database: %w", err)
 	}
 
@@ -91,6 +94,7 @@ type container struct {
 	router       http.Handler
 	server       *server.Server
 
+	retrier   retrier.Retrier
 	finalizer *depsFinalizer
 }
 

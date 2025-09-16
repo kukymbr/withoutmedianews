@@ -7,6 +7,7 @@ require (
 	github.com/doug-martin/goqu/v9 v9.19.0
 	github.com/getkin/kin-openapi v0.132.0
 	github.com/jackc/pgx/v5 v5.7.6
+	github.com/kukymbr/retrier v0.1.1
 	github.com/lib/pq v1.10.1
 	github.com/oapi-codegen/runtime v1.1.2
 	github.com/stretchr/testify v1.10.0

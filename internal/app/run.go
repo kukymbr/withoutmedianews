@@ -37,7 +37,7 @@ func Run(backgroundCtx context.Context, conf config.Config, logger *zap.Logger) 
 		)
 	}()
 
-	ctn := initContainer(conf, logger)
+	ctn := initContainer(backgroundCtx, conf, logger)
 	defer ctn.finalizer.finalize()
 
 	server := &http.Server{
