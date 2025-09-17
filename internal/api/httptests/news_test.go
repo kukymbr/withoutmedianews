@@ -7,7 +7,7 @@ import (
 	"testing"
 )
 
-func (s *HTTPTestSuite) TestGetNews() {
+func (s *HTTPTestSuite) TestGetNewses() {
 	client := s.getClient()
 
 	tests := []struct {
@@ -23,7 +23,7 @@ func (s *HTTPTestSuite) TestGetNews() {
 
 				s.Require().Equal(http.StatusOK, resp.StatusCode())
 				s.Require().Len(*resp.JSON200, 1)
-				s.assertNews(givenNews(), (*resp.JSON200)[0])
+				s.assertNews(givenNewsPublished(), (*resp.JSON200)[0])
 			},
 		},
 		{
@@ -34,7 +34,7 @@ func (s *HTTPTestSuite) TestGetNews() {
 
 				s.Require().Equal(http.StatusOK, resp.StatusCode())
 				s.Require().Len(*resp.JSON200, 1)
-				s.assertNews(givenNews(), (*resp.JSON200)[0])
+				s.assertNews(givenNewsPublished(), (*resp.JSON200)[0])
 			},
 		},
 		{
@@ -45,7 +45,7 @@ func (s *HTTPTestSuite) TestGetNews() {
 
 				s.Require().Equal(http.StatusOK, resp.StatusCode())
 				s.Require().Len(*resp.JSON200, 1)
-				s.assertNews(givenNews(), (*resp.JSON200)[0])
+				s.assertNews(givenNewsPublished(), (*resp.JSON200)[0])
 			},
 		},
 		{
@@ -56,7 +56,7 @@ func (s *HTTPTestSuite) TestGetNews() {
 
 				s.Require().Equal(http.StatusOK, resp.StatusCode())
 				s.Require().Len(*resp.JSON200, 1)
-				s.assertNews(givenNews(), (*resp.JSON200)[0])
+				s.assertNews(givenNewsPublished(), (*resp.JSON200)[0])
 			},
 		},
 		{
@@ -100,7 +100,7 @@ func (s *HTTPTestSuite) TestGetNews() {
 	}
 }
 
-func (s *HTTPTestSuite) TestGetNewsItem() {
+func (s *HTTPTestSuite) TestGetNews() {
 	client := s.getClient()
 
 	tests := []struct {
@@ -110,18 +110,27 @@ func (s *HTTPTestSuite) TestGetNewsItem() {
 	}{
 		{
 			Name: "Known item",
-			ID:   givenNews().ID,
+			ID:   givenNewsPublished().ID,
 			Assert: func(resp *GetNewsResponse, err error) {
 				s.Require().NoError(err)
 
 				s.Require().Equal(http.StatusOK, resp.StatusCode())
 				s.Require().NotNil(resp.JSON200)
-				s.assertNews(givenNews(), *resp.JSON200)
+				s.assertNews(givenNewsPublished(), *resp.JSON200)
 			},
 		},
 		{
 			Name: "Unknown item",
 			ID:   100,
+			Assert: func(resp *GetNewsResponse, err error) {
+				s.Require().NoError(err)
+
+				s.Require().Equal(http.StatusNotFound, resp.StatusCode())
+			},
+		},
+		{
+			Name: "Drafted item",
+			ID:   2,
 			Assert: func(resp *GetNewsResponse, err error) {
 				s.Require().NoError(err)
 

@@ -26,10 +26,9 @@ func (c *NewsController) GetNewses(
 		ctx,
 		req.Params.CategoryID,
 		req.Params.TagID,
-		//nolint:gosec // ignore uint conversion
 		db.PaginationReq{
-			Page:    uint(req.Params.Page),
-			PerPage: uint(req.Params.PerPage),
+			Page:    req.Params.Page,
+			PerPage: req.Params.PerPage,
 		},
 	)
 	if err != nil {

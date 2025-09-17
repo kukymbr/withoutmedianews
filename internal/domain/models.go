@@ -1,16 +1,27 @@
 package domain
 
-import "github.com/kukymbr/withoutmedianews/internal/db"
+import (
+	"github.com/kukymbr/withoutmedianews/internal/db"
+	"github.com/kukymbr/withoutmedianews/internal/pkg/sqlvalues"
+)
 
 func NewNews(dto db.News) News {
+	category := Category{}
+
+	if dto.Category != nil {
+		category = Category{
+			ID:    dto.Category.ID,
+			Title: dto.Category.Title,
+		}
+	}
+
 	return News{
 		ID:          dto.ID,
 		Title:       dto.Title,
-		Author:      dto.Author,
+		Author:      sqlvalues.PtrToValue(dto.Author),
 		ShortText:   dto.ShortText,
-		Content:     dto.Content,
-		Category:    Category(dto.Category),
-		Tags:        NewTags(dto.Tags),
+		Content:     sqlvalues.PtrToValue(dto.Content),
+		Category:    category,
 		PublishedAt: dto.PublishedAt,
 	}
 }

@@ -7,14 +7,14 @@ import (
 	"github.com/kukymbr/withoutmedianews/internal/domain"
 )
 
-func NewTagsController(service *domain.DictionaryService) *TagsController {
+func NewTagsController(service *domain.Service) *TagsController {
 	return &TagsController{
 		service: service,
 	}
 }
 
 type TagsController struct {
-	service *domain.DictionaryService
+	service *domain.Service
 }
 
 func (c *CategoriesController) GetTags(

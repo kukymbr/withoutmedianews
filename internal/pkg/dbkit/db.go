@@ -1,46 +1,38 @@
 package dbkit
 
 import (
-	"database/sql"
+	"context"
 	"fmt"
 
-	"github.com/doug-martin/goqu/v9"
+	"github.com/go-pg/pg/v10"
 	_ "github.com/jackc/pgx/v5/stdlib"
-)
-
-const (
-	sqlDriver   = "pgx"
-	goquDialect = "postgres"
+	"github.com/kukymbr/withoutmedianews/internal/config"
 )
 
 // NewDatabase creates a new Database wrapper.
-func NewDatabase(dsn string) (*Database, error) {
-	db, err := sql.Open(sqlDriver, dsn)
-	if err != nil {
-		return nil, fmt.Errorf("open database: %w", err)
-	}
+func NewDatabase(conf config.DbConfig) (*Database, error) {
+	db := pg.Connect(&pg.Options{
+		Addr:     conf.Address(),
+		User:     conf.Username(),
+		Password: conf.Password(),
+		Database: conf.Database(),
+	})
 
 	return &Database{
-		db:  db,
-		qdb: goqu.New(goquDialect, db),
+		db: db,
 	}, nil
 }
 
 type Database struct {
-	db  *sql.DB
-	qdb *goqu.Database
+	db *pg.DB
 }
 
-func (d *Database) DB() *sql.DB {
+func (d *Database) DB() *pg.DB {
 	return d.db
 }
 
-func (d *Database) Goqu() *goqu.Database {
-	return d.qdb
-}
-
-func (d *Database) Ping() error {
-	if err := d.db.Ping(); err != nil {
+func (d *Database) Ping(ctx context.Context) error {
+	if err := d.db.Ping(ctx); err != nil {
 		return fmt.Errorf("ping database: %w", err)
 	}
 
@@ -56,7 +48,7 @@ func (d *Database) Close() error {
 		return fmt.Errorf("close database: %w", err)
 	}
 
-	d.qdb = nil
+	d.db = nil
 
 	return nil
 }

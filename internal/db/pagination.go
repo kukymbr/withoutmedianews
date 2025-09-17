@@ -3,8 +3,8 @@ package db
 const perPageDefault = 10
 
 type PaginationReq struct {
-	Page    uint
-	PerPage uint
+	Page    int
+	PerPage int
 }
 
 func (r PaginationReq) GetNormalized() PaginationReq {
@@ -21,6 +21,6 @@ func (r PaginationReq) GetNormalized() PaginationReq {
 	return normalized
 }
 
-func (r PaginationReq) Offset() uint {
+func (r PaginationReq) Offset() int {
 	return (r.Page - 1) * r.PerPage
 }

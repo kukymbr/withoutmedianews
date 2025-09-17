@@ -1,6 +1,8 @@
 GOLANGCI_LINT_VERSION := 2.1.6
 GO_TEST_CMD := go test -race
 GO_TEST_API_CMD := go test -tags api_test
+DB_PORT := 5432
+DB_DSN := postgres://postgres:postgres@localhost:$(DB_PORT)/postgres?sslmode=disable
 
 all:
 	$(MAKE) clean
@@ -22,8 +24,11 @@ build:
 	go build $(GO_BUILD_ARGS) -o bin/withoutmedianews ./cmd/withoutmedianews
 
 generate:
-	go generate ./...
+	GENNA_DATABASE_DSN=$(DB_DSN) go generate ./...
 	go mod tidy
+
+generate_genna:
+	go tool genna model -c $(DB_DSN) -o internal/db/models.gen.go -t public.* -f
 
 lint:
 	if [ ! -f ./bin/golangci-lint ]; then \
@@ -35,7 +40,7 @@ test:
 	$(GO_TEST_CMD) ./...
 
 test_api:
-	$(GO_TEST_API_CMD) ./internal/api/httptests/...
+	DB_PORT=$(DB_PORT) $(GO_TEST_API_CMD) ./internal/api/httptests/...
 
 clean:
 	go clean

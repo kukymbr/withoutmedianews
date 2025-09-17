@@ -90,6 +90,10 @@ func (c DbConfig) Port() int {
 	return c.port
 }
 
+func (c DbConfig) Address() string {
+	return net.JoinHostPort(c.Host(), strconv.Itoa(c.Port()))
+}
+
 func (c DbConfig) Username() string {
 	return c.username
 }

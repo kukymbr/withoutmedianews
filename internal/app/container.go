@@ -10,7 +10,7 @@ import (
 	"github.com/kukymbr/withoutmedianews/internal/api/http/controller"
 	"github.com/kukymbr/withoutmedianews/internal/api/http/server"
 	"github.com/kukymbr/withoutmedianews/internal/config"
-	repository2 "github.com/kukymbr/withoutmedianews/internal/db"
+	"github.com/kukymbr/withoutmedianews/internal/db"
 	"github.com/kukymbr/withoutmedianews/internal/domain"
 	"github.com/kukymbr/withoutmedianews/internal/pkg/dbkit"
 	"go.uber.org/zap"
@@ -40,30 +40,30 @@ func initDatabase(ctn *Container, ctx context.Context) error {
 
 	ctn.logger.Debug("connecting to database", zap.String("dsn", ctn.config.Db().ToDSNDebug()))
 
-	db, err := dbkit.NewDatabase(ctn.config.Db().ToDSN())
+	database, err := dbkit.NewDatabase(ctn.config.Db())
 	if err != nil {
 		return fmt.Errorf("open database: %w", err)
 	}
 
-	if err := ctn.retrier.Do(ctx, db.Ping); err != nil {
+	if err := ctn.retrier.Do(ctx, func() error {
+		return database.Ping(ctx)
+	}); err != nil {
 		return fmt.Errorf("ping database: %w", err)
 	}
 
-	ctn.db = db
+	ctn.db = database
 
-	ctn.finalizer.register("database", db.Close)
+	ctn.finalizer.register("database", database.Close)
 
 	return nil
 }
 
 func initRepositories(ctn *Container) {
-	ctn.newsRepo = repository2.NewNewsRepository(ctn.db, ctn.logger)
-	ctn.dictRepo = repository2.NewDictionaryRepository(ctn.db, ctn.logger)
+	ctn.newsRepo = db.NewNewsRepository(ctn.db.DB(), ctn.logger)
 }
 
 func initServices(ctn *Container) {
 	ctn.newsService = domain.NewNewsService(ctn.newsRepo)
-	ctn.dictService = domain.NewDictionaryService(ctn.dictRepo)
 }
 
 func initServer(ctn *Container) {
@@ -71,8 +71,8 @@ func initServer(ctn *Container) {
 
 	ctn.server = &server.Server{
 		NewsController:       controller.NewNewsController(ctn.newsService),
-		CategoriesController: controller.NewCategoriesController(ctn.dictService),
-		TagsController:       controller.NewTagsController(ctn.dictService),
+		CategoriesController: controller.NewCategoriesController(ctn.newsService),
+		TagsController:       controller.NewTagsController(ctn.newsService),
 	}
 
 	ctn.router = initRouter(ctn.server, ctn.errResponder)
@@ -84,11 +84,8 @@ type Container struct {
 	logger *zap.Logger
 	db     *dbkit.Database
 
-	newsRepo *repository2.NewsRepository
-	dictRepo *repository2.DictionaryRepository
-
+	newsRepo    *db.NewsRepository
 	newsService *domain.Service
-	dictService *domain.DictionaryService
 
 	errResponder *server.ErrorResponder
 	router       http.Handler
