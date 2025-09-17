@@ -137,6 +137,24 @@ func (s *HTTPTestSuite) TestGetNews() {
 				s.Require().Equal(http.StatusNotFound, resp.StatusCode())
 			},
 		},
+		{
+			Name: "Scheduled item",
+			ID:   3,
+			Assert: func(resp *GetNewsResponse, err error) {
+				s.Require().NoError(err)
+
+				s.Require().Equal(http.StatusNotFound, resp.StatusCode())
+			},
+		},
+		{
+			Name: "Deleted item",
+			ID:   4,
+			Assert: func(resp *GetNewsResponse, err error) {
+				s.Require().NoError(err)
+
+				s.Require().Equal(http.StatusNotFound, resp.StatusCode())
+			},
+		},
 	}
 
 	for _, test := range tests {
@@ -146,4 +164,29 @@ func (s *HTTPTestSuite) TestGetNews() {
 			test.Assert(resp, err)
 		})
 	}
+}
+
+func (s *HTTPTestSuite) TestGetCategories() {
+	client := s.getClient()
+
+	resp, err := client.GetCategoriesWithResponse(s.T().Context())
+	s.Require().NoError(err)
+
+	s.Require().NotNil(resp.JSON200)
+	s.Require().Len(*resp.JSON200, 2)
+
+	s.Equal(1, (*resp.JSON200)[0].ID)
+	s.Equal(4, (*resp.JSON200)[1].ID)
+}
+
+func (s *HTTPTestSuite) TestGetTags() {
+	client := s.getClient()
+
+	resp, err := client.GetTagsWithResponse(s.T().Context())
+	s.Require().NoError(err)
+
+	s.Require().NotNil(resp.JSON200)
+	s.Require().Len(*resp.JSON200, 1)
+
+	s.Equal(1, (*resp.JSON200)[0].ID)
 }

@@ -4,7 +4,6 @@ go 1.24.0
 
 require (
 	github.com/caarlos0/env/v11 v11.3.1
-	github.com/doug-martin/goqu/v9 v9.19.0
 	github.com/getkin/kin-openapi v0.132.0
 	github.com/go-pg/pg/v10 v10.15.0
 	github.com/jackc/pgx/v5 v5.7.6
