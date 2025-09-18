@@ -2,10 +2,12 @@ package db
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
 	"github.com/go-pg/pg/v10"
+	"github.com/kukymbr/withoutmedianews/internal/pkg/dbkit"
 	"go.uber.org/zap"
 )
 
@@ -36,25 +38,19 @@ func (r *NewsRepository) GetList(
 		Offset(page.Offset()).
 		Limit(page.PerPage).
 		Select()
-	if err != nil {
-		return nil, fmt.Errorf("fetch news list: %w", err)
-	}
 
-	return dtos, nil
+	return dtos, listResponseError(err)
 }
 
 func (r *NewsRepository) GetNews(ctx context.Context, id int) (News, error) {
 	var dto News
 
 	err := r.getNewsQueryBase(ctx, &dto, 0, 0).
-		Where("? = ?", pg.Ident(Columns.News.ID), id).
+		Where("t.? = ?", pg.Ident(Columns.News.ID), id).
 		Limit(1).
 		Select()
-	if err != nil {
-		return News{}, fmt.Errorf("fetch single news item: %w", err)
-	}
 
-	return dto, nil
+	return dto, itemResponseError(err)
 }
 
 func (r *NewsRepository) CountNews(ctx context.Context, categoryID int, tagID int) (int, error) {
@@ -70,22 +66,26 @@ func (r *NewsRepository) ReadCategories(ctx context.Context) ([]Category, error)
 	var items []Category
 
 	query := r.withPublishedFilter(r.db.ModelContext(ctx, &items), Columns.Category.StatusID)
-	if err := query.Select(); err != nil {
-		return nil, fmt.Errorf("fetch categories: %w", err)
-	}
+	err := query.Select()
 
-	return items, nil
+	return items, listResponseError(err)
 }
 
-func (r *NewsRepository) ReadTags(ctx context.Context) ([]Tag, error) {
+func (r *NewsRepository) ReadTags(ctx context.Context, ids []int) ([]Tag, error) {
 	var items []Tag
 
-	query := r.withPublishedFilter(r.db.ModelContext(ctx, &items), Columns.Category.StatusID)
-	if err := query.Select(); err != nil {
-		return nil, fmt.Errorf("fetch tags: %w", err)
+	if ids != nil && len(ids) == 0 {
+		return nil, fmt.Errorf("%w: empty IDs list given", dbkit.ErrNotFound)
 	}
 
-	return items, nil
+	query := r.withPublishedFilter(r.db.ModelContext(ctx, &items), Columns.Category.StatusID)
+	if len(ids) > 0 {
+		query.Where("t.? IN (?)", pg.Ident(Columns.Tag.ID), pg.In(ids))
+	}
+
+	err := query.Select()
+
+	return items, listResponseError(err)
 }
 
 func (r *NewsRepository) getNewsQueryBase(ctx context.Context, model any, categoryID int, tagID int) *pg.Query {
@@ -94,19 +94,41 @@ func (r *NewsRepository) getNewsQueryBase(ctx context.Context, model any, catego
 	query := r.db.ModelContext(ctx, model)
 	query = r.withPublishedFilter(query, Columns.News.StatusID).
 		Relation(Columns.News.Category).
-		Where("? AT TIME ZONE 'UTC' <= ?", pg.Ident(Columns.News.PublishedAt), now)
+		Where("t.? AT TIME ZONE 'UTC' <= ?", pg.Ident(Columns.News.PublishedAt), now)
 
 	if categoryID > 0 {
-		query = query.Where("? = ?", pg.Ident(Columns.News.CategoryID), categoryID)
+		query = query.Where("t.? = ?", pg.Ident(Columns.News.CategoryID), categoryID)
 	}
 
 	if tagID > 0 {
-		query = query.Where("? = ANY(?)", tagID, pg.Ident(Columns.News.TagIDs))
+		query = query.Where("? = ANY(t.?)", tagID, pg.Ident(Columns.News.TagIDs))
 	}
 
 	return query
 }
 
 func (r *NewsRepository) withPublishedFilter(query *pg.Query, field string) *pg.Query {
-	return query.Where("? = ?", pg.Ident(field), statusPublished)
+	return query.Where("t.? = ?", pg.Ident(field), statusPublished)
+}
+
+func listResponseError(err error) error {
+	switch {
+	case err == nil:
+		return nil
+	case errors.Is(err, pg.ErrNoRows):
+		return nil
+	}
+
+	return err
+}
+
+func itemResponseError(err error) error {
+	switch {
+	case err == nil:
+		return nil
+	case errors.Is(err, pg.ErrNoRows):
+		return fmt.Errorf("%w: %s", dbkit.ErrNotFound, err.Error())
+	}
+
+	return err
 }

@@ -9,10 +9,7 @@ func NewNews(dto db.News) News {
 	category := Category{}
 
 	if dto.Category != nil {
-		category = Category{
-			ID:    dto.Category.ID,
-			Title: dto.Category.Title,
-		}
+		category = NewCategory(*dto.Category)
 	}
 
 	return News{
@@ -24,16 +21,6 @@ func NewNews(dto db.News) News {
 		Category:    category,
 		PublishedAt: dto.PublishedAt,
 	}
-}
-
-func NewNewses(dtos []db.News) []News {
-	newses := make([]News, 0, len(dtos))
-
-	for _, dto := range dtos {
-		newses = append(newses, NewNews(dto))
-	}
-
-	return newses
 }
 
 func NewTag(dto db.Tag) Tag {
