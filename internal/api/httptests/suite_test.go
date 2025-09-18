@@ -52,7 +52,7 @@ func (s *HTTPTestSuite) SetupSuite() {
 
 	logger := logkit.NewTestLogger(s.T())
 
-	s.ctn = app.NewContainer(s.T().Context(), conf, logger)
+	s.ctn, err = app.BuildContainer(s.T().Context(), s.T().Context(), conf, logger)
 }
 
 func (s *HTTPTestSuite) TearDownSuite() {

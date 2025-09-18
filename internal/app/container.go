@@ -3,6 +3,7 @@ package app
 import (
 	"context"
 	"fmt"
+	"net"
 	"net/http"
 	"time"
 
@@ -18,7 +19,12 @@ import (
 	_ "github.com/jackc/pgx/v5/stdlib"
 )
 
-func NewContainer(ctx context.Context, config config.Config, logger *zap.Logger) *Container {
+func BuildContainer(
+	backgroundCtx context.Context,
+	requestsCtx context.Context,
+	config config.Config,
+	logger *zap.Logger,
+) (*Container, error) {
 	ctn := &Container{
 		config:    config,
 		logger:    logger,
@@ -26,13 +32,15 @@ func NewContainer(ctx context.Context, config config.Config, logger *zap.Logger)
 		retrier:   retrier.NewLinear(5, 10*time.Second),
 	}
 
-	must(initDatabase(ctn, ctx), logger)
+	if err := initDatabase(ctn, backgroundCtx); err != nil {
+		return nil, err
+	}
 
 	initRepositories(ctn)
 	initServices(ctn)
-	initServer(ctn)
+	initServer(ctn, requestsCtx)
 
-	return ctn
+	return ctn, nil
 }
 
 func initDatabase(ctn *Container, ctx context.Context) error {
@@ -66,7 +74,7 @@ func initServices(ctn *Container) {
 	ctn.newsService = domain.NewNewsService(ctn.newsRepo)
 }
 
-func initServer(ctn *Container) {
+func initServer(ctn *Container, ctx context.Context) {
 	ctn.errResponder = server.NewErrorResponder(ctn.logger)
 
 	ctn.server = &server.Server{
@@ -76,6 +84,16 @@ func initServer(ctn *Container) {
 	}
 
 	ctn.router = initRouter(ctn.server, ctn.errResponder)
+
+	ctn.httpServer = &http.Server{
+		Addr:              ctn.config.API().Address(),
+		Handler:           ctn.router,
+		ReadTimeout:       readTimeout,
+		ReadHeaderTimeout: readHeaderTimeout,
+		BaseContext: func(_ net.Listener) context.Context {
+			return ctx
+		},
+	}
 }
 
 type Container struct {
@@ -89,6 +107,7 @@ type Container struct {
 
 	errResponder *server.ErrorResponder
 	router       http.Handler
+	httpServer   *http.Server
 	server       *server.Server
 
 	retrier   retrier.Retrier
@@ -129,12 +148,4 @@ func (d *depsFinalizer) finalize() {
 type depFinalizer struct {
 	name string
 	fn   func() error
-}
-
-func must(err error, logger *zap.Logger) {
-	if err == nil {
-		return
-	}
-
-	logger.Fatal("initialization fail", zap.Error(err))
 }
