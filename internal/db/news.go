@@ -8,19 +8,16 @@ import (
 
 	"github.com/go-pg/pg/v10"
 	"github.com/kukymbr/withoutmedianews/internal/pkg/dbkit"
-	"go.uber.org/zap"
 )
 
-func NewNewsRepository(db *pg.DB, logger *zap.Logger) *NewsRepository {
+func NewNewsRepository(db *pg.DB) *NewsRepository {
 	return &NewsRepository{
-		db:     db,
-		logger: logger,
+		db: db,
 	}
 }
 
 type NewsRepository struct {
-	db     *pg.DB
-	logger *zap.Logger
+	db *pg.DB
 }
 
 func (r *NewsRepository) GetList(

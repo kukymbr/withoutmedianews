@@ -67,7 +67,7 @@ func initDatabase(ctn *Container, ctx context.Context) error {
 }
 
 func initRepositories(ctn *Container) {
-	ctn.newsRepo = db.NewNewsRepository(ctn.db.DB(), ctn.logger)
+	ctn.newsRepo = db.NewNewsRepository(ctn.db.DB())
 }
 
 func initServices(ctn *Container) {
