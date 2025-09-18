@@ -105,7 +105,7 @@ func (r *NewsRepository) getNewsQueryBase(ctx context.Context, model any, catego
 }
 
 func (r *NewsRepository) withPublishedFilter(query *pg.Query, field string) *pg.Query {
-	return query.Where("t.? = ?", pg.Ident(field), statusPublished)
+	return query.Where("t.? = ?", pg.Ident(field), StatusEnabled)
 }
 
 func listResponseError(err error) error {
