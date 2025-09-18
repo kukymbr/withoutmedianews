@@ -12,7 +12,6 @@ import (
 	"github.com/kukymbr/withoutmedianews/internal/api/http/server"
 	"github.com/kukymbr/withoutmedianews/internal/config"
 	"github.com/kukymbr/withoutmedianews/internal/db"
-	"github.com/kukymbr/withoutmedianews/internal/domain"
 	"github.com/kukymbr/withoutmedianews/internal/pkg/dbkit"
 	"go.uber.org/zap"
 
@@ -37,7 +36,6 @@ func BuildContainer(
 	}
 
 	initRepositories(ctn)
-	initServices(ctn)
 	initServer(ctn, requestsCtx)
 
 	return ctn, nil
@@ -67,20 +65,17 @@ func initDatabase(ctn *Container, ctx context.Context) error {
 }
 
 func initRepositories(ctn *Container) {
-	ctn.newsRepo = db.NewNewsRepository(ctn.db.DB())
-}
-
-func initServices(ctn *Container) {
-	ctn.newsService = domain.NewNewsService(ctn.newsRepo)
+	repo := db.NewWithoutmedianewsRepo(ctn.db.DB())
+	ctn.newsRepo = &repo
 }
 
 func initServer(ctn *Container, ctx context.Context) {
 	ctn.errResponder = server.NewErrorResponder(ctn.logger)
 
 	ctn.server = &server.Server{
-		NewsController:       controller.NewNewsController(ctn.newsService),
-		CategoriesController: controller.NewCategoriesController(ctn.newsService),
-		TagsController:       controller.NewTagsController(ctn.newsService),
+		NewsController:       controller.NewNewsController(ctn.newsRepo),
+		CategoriesController: controller.NewCategoriesController(ctn.newsRepo),
+		TagsController:       controller.NewTagsController(ctn.newsRepo),
 	}
 
 	ctn.router = initRouter(ctn.server, ctn.errResponder)
@@ -102,8 +97,7 @@ type Container struct {
 	logger *zap.Logger
 	db     *dbkit.Database
 
-	newsRepo    *db.NewsRepository
-	newsService *domain.Service
+	newsRepo *db.WithoutmedianewsRepo
 
 	errResponder *server.ErrorResponder
 	router       http.Handler

@@ -90,6 +90,10 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/News"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/UnprocessableEntity"
         default:
           $ref: "#/components/responses/DefaultError"
 
@@ -225,6 +229,18 @@ components:
         type: integer
 
   responses:
+    NotFound:
+      description: Not found
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/APIError"
+    UnprocessableEntity:
+      description: Unprocessable Entity
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/APIError"
     DefaultError:
       description: Default error response
       content:

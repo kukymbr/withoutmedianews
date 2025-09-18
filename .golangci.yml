@@ -49,6 +49,14 @@ linters:
       - builtin$
       - examples$
       - .*\.gen\.go$
+      # don't go out there bro, u don't wanna lint it.
+      - ^internal/db/db.*\.go$
+      - ^internal/db/filter.*\.go$
+      - ^internal/db/model\.go$
+      - ^internal/db/model_search\.go$
+      - ^internal/db/model_validate\.go$
+      - ^internal/db/options\.go$
+      - ^internal/db/withoutmedianews\.go$
 formatters:
   exclusions:
     generated: lax

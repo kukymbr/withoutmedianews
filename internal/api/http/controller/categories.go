@@ -4,24 +4,29 @@ import (
 	"context"
 
 	apihttp "github.com/kukymbr/withoutmedianews/internal/api/http"
-	"github.com/kukymbr/withoutmedianews/internal/domain"
+	"github.com/kukymbr/withoutmedianews/internal/db"
 )
 
-func NewCategoriesController(service *domain.Service) *CategoriesController {
+func NewCategoriesController(repo *db.WithoutmedianewsRepo) *CategoriesController {
 	return &CategoriesController{
-		service: service,
+		repo: repo,
 	}
 }
 
 type CategoriesController struct {
-	service *domain.Service
+	repo *db.WithoutmedianewsRepo
 }
 
 func (c *CategoriesController) GetCategories(
 	ctx context.Context,
 	_ apihttp.GetCategoriesRequestObject,
 ) (apihttp.GetCategoriesResponseObject, error) {
-	categories, err := c.service.GetCategories(ctx)
+	categories, err := c.repo.CategoriesByFilters(
+		ctx,
+		nil,
+		db.PagerNoLimit,
+		db.EnabledOnly(),
+	)
 	if err != nil {
 		return nil, err
 	}

@@ -4,24 +4,24 @@ import (
 	"context"
 
 	apihttp "github.com/kukymbr/withoutmedianews/internal/api/http"
-	"github.com/kukymbr/withoutmedianews/internal/domain"
+	"github.com/kukymbr/withoutmedianews/internal/db"
 )
 
-func NewTagsController(service *domain.Service) *TagsController {
+func NewTagsController(repo *db.WithoutmedianewsRepo) *TagsController {
 	return &TagsController{
-		service: service,
+		repo: repo,
 	}
 }
 
 type TagsController struct {
-	service *domain.Service
+	repo *db.WithoutmedianewsRepo
 }
 
 func (c *CategoriesController) GetTags(
 	ctx context.Context,
 	_ apihttp.GetTagsRequestObject,
 ) (apihttp.GetTagsResponseObject, error) {
-	tags, err := c.service.GetTags(ctx)
+	tags, err := c.repo.TagsByFilters(ctx, nil, db.PagerNoLimit, db.EnabledOnly())
 	if err != nil {
 		return nil, err
 	}
