@@ -23,7 +23,7 @@ func (s *HTTPTestSuite) TestGetNewses() {
 
 				s.Require().Equal(http.StatusOK, resp.StatusCode())
 				s.Require().Len(*resp.JSON200, 1)
-				s.assertNews(givenNewsPublished(), (*resp.JSON200)[0])
+				s.assertNewsListable(givenNewsListable1(), (*resp.JSON200)[0])
 			},
 		},
 		{
@@ -34,7 +34,7 @@ func (s *HTTPTestSuite) TestGetNewses() {
 
 				s.Require().Equal(http.StatusOK, resp.StatusCode())
 				s.Require().Len(*resp.JSON200, 1)
-				s.assertNews(givenNewsPublished(), (*resp.JSON200)[0])
+				s.assertNewsListable(givenNewsListable1(), (*resp.JSON200)[0])
 			},
 		},
 		{
@@ -45,7 +45,7 @@ func (s *HTTPTestSuite) TestGetNewses() {
 
 				s.Require().Equal(http.StatusOK, resp.StatusCode())
 				s.Require().Len(*resp.JSON200, 1)
-				s.assertNews(givenNewsPublished(), (*resp.JSON200)[0])
+				s.assertNewsListable(givenNewsListable1(), (*resp.JSON200)[0])
 			},
 		},
 		{
@@ -56,7 +56,7 @@ func (s *HTTPTestSuite) TestGetNewses() {
 
 				s.Require().Equal(http.StatusOK, resp.StatusCode())
 				s.Require().Len(*resp.JSON200, 1)
-				s.assertNews(givenNewsPublished(), (*resp.JSON200)[0])
+				s.assertNewsListable(givenNewsListable1(), (*resp.JSON200)[0])
 			},
 		},
 		{
@@ -110,13 +110,13 @@ func (s *HTTPTestSuite) TestGetNews() {
 	}{
 		{
 			Name: "Known item",
-			ID:   givenNewsPublished().ID,
+			ID:   givenNews1().ID,
 			Assert: func(resp *GetNewsResponse, err error) {
 				s.Require().NoError(err)
 
 				s.Require().Equal(http.StatusOK, resp.StatusCode())
 				s.Require().NotNil(resp.JSON200)
-				s.assertNews(givenNewsPublished(), *resp.JSON200)
+				s.assertNews(givenNews1(), *resp.JSON200)
 			},
 		},
 		{
@@ -137,15 +137,15 @@ func (s *HTTPTestSuite) TestGetNews() {
 				s.Require().Equal(http.StatusNotFound, resp.StatusCode())
 			},
 		},
-		//{
-		//	Name: "Scheduled item",
-		//	ID:   3,
-		//	Assert: func(resp *GetNewsResponse, err error) {
-		//		s.Require().NoError(err)
-		//
-		//		s.Require().Equal(http.StatusNotFound, resp.StatusCode())
-		//	},
-		//},
+		{
+			Name: "Scheduled item",
+			ID:   3,
+			Assert: func(resp *GetNewsResponse, err error) {
+				s.Require().NoError(err)
+
+				s.Require().Equal(http.StatusNotFound, resp.StatusCode())
+			},
+		},
 		{
 			Name: "Deleted item",
 			ID:   4,

@@ -39,6 +39,7 @@ func (s *Service) GetList(
 		db.NewPager(page, perPage),
 		db.EnabledOnly(),
 		db.AlreadyPublished(),
+		// db.WithoutColumns(db.Columns.News.Content),
 		db.WithColumns(db.Columns.News.Category),
 	)
 	if err != nil {

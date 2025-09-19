@@ -86,3 +86,14 @@ func (s *HTTPTestSuite) assertNews(expected News, item News) {
 	s.Equal(expected.Category, item.Category)
 	s.ElementsMatch(expected.Tags, item.Tags)
 }
+
+func (s *HTTPTestSuite) assertNewsListable(expected NewsListable, item NewsListable) {
+	s.T().Helper()
+
+	s.Equal(expected.ID, item.ID)
+	s.Equal(expected.Author, item.Author)
+	s.Equal(expected.Title, item.Title)
+	s.Equal(expected.ShortText, item.ShortText)
+	s.Equal(expected.Category, item.Category)
+	s.ElementsMatch(expected.Tags, item.Tags)
+}
