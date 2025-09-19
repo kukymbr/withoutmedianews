@@ -5,6 +5,7 @@ import (
 
 	"github.com/kukymbr/withoutmedianews/internal/api/http"
 	"github.com/kukymbr/withoutmedianews/internal/domain"
+	"github.com/kukymbr/withoutmedianews/internal/pkg/ptrs"
 )
 
 func NewNewsController(service *domain.Service) *NewsController {
@@ -66,7 +67,11 @@ func (c *NewsController) GetNewsCount(
 	return apihttp.GetNewsCount200JSONResponse{Count: count}, nil
 }
 
-func newCategory(dto domain.Category) apihttp.Category {
+func newCategory(dto *domain.Category) apihttp.Category {
+	if dto == nil {
+		return apihttp.Category{}
+	}
+
 	return apihttp.Category{
 		ID:    dto.ID,
 		Title: dto.Title,
@@ -92,13 +97,13 @@ func newTags(dtos []domain.Tag) []apihttp.Tag {
 
 func newNews(dto domain.News) apihttp.News {
 	return apihttp.News{
-		Author:      dto.Author,
+		Author:      ptrs.PtrToValue(dto.Author),
 		Category:    newCategory(dto.Category),
-		Content:     dto.Content,
+		Content:     ptrs.PtrToValue(dto.Content),
 		ID:          dto.ID,
 		PublishedAt: dto.PublishedAt,
 		ShortText:   dto.ShortText,
-		TagIds:      dto.TagIds,
+		TagIds:      dto.TagIDs,
 		Tags:        newTags(dto.Tags),
 		Title:       dto.Title,
 	}
@@ -106,12 +111,12 @@ func newNews(dto domain.News) apihttp.News {
 
 func newNewsListable(dto domain.News) apihttp.NewsListable {
 	return apihttp.NewsListable{
-		Author:      dto.Author,
+		Author:      ptrs.PtrToValue(dto.Author),
 		Category:    newCategory(dto.Category),
 		ID:          dto.ID,
 		PublishedAt: dto.PublishedAt,
 		ShortText:   dto.ShortText,
-		TagIds:      dto.TagIds,
+		TagIds:      dto.TagIDs,
 		Tags:        newTags(dto.Tags),
 		Title:       dto.Title,
 	}

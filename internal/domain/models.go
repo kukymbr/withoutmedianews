@@ -1,63 +1,103 @@
 package domain
 
 import (
+	"time"
+
 	"github.com/kukymbr/withoutmedianews/internal/db"
-	"github.com/kukymbr/withoutmedianews/internal/pkg/ptrs"
 )
 
-func NewNewses(dtos []db.News) []News {
-	newses := make([]News, len(dtos))
+//go:generate go tool colgen -imports=github.com/kukymbr/withoutmedianews/internal/db,github.com/kukymbr/withoutmedianews/internal/pkg/maps -funcpkg=maps
+//colgen:News,Category,Tag
+//colgen:News:TagIDs,UniqueTagIDs,MapP(db.News)
+//colgen:Category:MapP(db.Category)
+//colgen:Tag:MapP(db.Tag)
 
-	for i, dto := range dtos {
-		newses[i] = NewNews(dto)
-	}
-
-	return newses
+type Tag struct {
+	ID       int
+	Name     string
+	StatusID int
 }
 
-func NewNews(dto db.News) News {
-	return News{
-		ID:          dto.ID,
-		Title:       dto.Title,
-		Author:      ptrs.PtrToValue(dto.Author),
-		ShortText:   dto.ShortText,
-		Content:     ptrs.PtrToValue(dto.Content),
-		Category:    NewCategory(ptrs.PtrToValue(dto.Category)),
-		PublishedAt: dto.PublishedAt,
-		TagIds:      dto.TagIDs,
+func NewTag(in *db.Tag) *Tag {
+	if in == nil {
+		return nil
 	}
-}
 
-func NewTag(dto db.Tag) Tag {
-	return Tag{
-		ID:   dto.ID,
-		Name: dto.Name,
+	return &Tag{
+		ID:       in.ID,
+		Name:     in.Name,
+		StatusID: in.StatusID,
 	}
 }
 
-func NewTags(dtos []db.Tag) []Tag {
-	tags := make([]Tag, 0, len(dtos))
-
-	for _, dto := range dtos {
-		tags = append(tags, NewTag(dto))
-	}
-
-	return tags
+type Category struct {
+	ID       int
+	Title    string
+	Sort     *int
+	StatusID int
 }
 
-func NewCategory(dto db.Category) Category {
-	return Category{
-		ID:    dto.ID,
-		Title: dto.Title,
+func NewCategory(in *db.Category) *Category {
+	if in == nil {
+		return nil
+	}
+
+	return &Category{
+		ID:       in.ID,
+		Title:    in.Title,
+		Sort:     in.Sort,
+		StatusID: in.StatusID,
 	}
 }
 
-func NewCategories(dtos []db.Category) []Category {
-	categories := make([]Category, 0, len(dtos))
+type News struct {
+	ID          int
+	Title       string
+	ShortText   string
+	Content     *string
+	Author      *string
+	CategoryID  int
+	TagIDs      []int
+	PublishedAt time.Time
+	CreatedAt   time.Time
+	StatusID    int
+	Category    *Category
+	Tags        Tags
+}
 
-	for _, dto := range dtos {
-		categories = append(categories, NewCategory(dto))
+func NewNews(in *db.News) *News {
+	if in == nil {
+		return nil
 	}
 
-	return categories
+	return &News{
+		ID:          in.ID,
+		Title:       in.Title,
+		ShortText:   in.ShortText,
+		Content:     in.Content,
+		Author:      in.Author,
+		CategoryID:  in.CategoryID,
+		TagIDs:      in.TagIDs,
+		PublishedAt: in.PublishedAt,
+		CreatedAt:   in.CreatedAt,
+		StatusID:    in.StatusID,
+		Category:    NewCategory(in.Category),
+	}
+}
+
+func (list NewsList) SetTags(tags Tags) {
+	index := tags.Index()
+
+	for i, news := range list {
+		itemTags := make([]Tag, 0, len(news.TagIDs))
+
+		for _, id := range news.TagIDs {
+			tag, ok := index[id]
+			if ok {
+				itemTags = append(itemTags, tag)
+			}
+		}
+
+		list[i].Tags = itemTags
+	}
 }

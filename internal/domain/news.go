@@ -33,10 +33,7 @@ func (s *Service) GetList(
 		return nil, fmt.Errorf("read news list: %w", err)
 	}
 
-	tagIDs := collectTagIDs(items)
-	newses := NewNewses(items)
-
-	return s.enrichNewsesWithTags(ctx, newses, tagIDs)
+	return s.enrichNewsesWithTags(ctx, NewNewsList(items))
 }
 
 func (s *Service) GetNews(ctx context.Context, id int) (News, error) {
@@ -55,7 +52,7 @@ func (s *Service) GetNews(ctx context.Context, id int) (News, error) {
 		return News{}, ErrNotFound
 	}
 
-	list, err := s.enrichNewsesWithTags(ctx, []News{NewNews(*dto)}, dto.TagIDs)
+	list, err := s.enrichNewsesWithTags(ctx, NewNewsList([]db.News{*dto}))
 	if err != nil {
 		return News{}, err
 	}
@@ -90,58 +87,18 @@ func (s *Service) GetTags(ctx context.Context) ([]Tag, error) {
 	return NewTags(tags), nil
 }
 
-func (s *Service) enrichNewsesWithTags(ctx context.Context, newses []News, tagIDs []int) ([]News, error) {
-	if len(newses) == 0 {
-		return nil, nil
+func (s *Service) enrichNewsesWithTags(ctx context.Context, newses NewsList) (NewsList, error) {
+	tagIDs := newses.UniqueTagIDs()
+	if len(tagIDs) == 0 {
+		return newses, nil
 	}
 
-	tags, err := s.repo.TagsByFilters(ctx, &db.TagSearch{IDs: tagIDs}, db.PagerNoLimit)
+	dbTags, err := s.repo.TagsByFilters(ctx, &db.TagSearch{IDs: tagIDs}, db.PagerNoLimit)
 	if err != nil {
 		return nil, err
 	}
 
-	index := newTagsIndex(tags)
-
-	for i, news := range newses {
-		newses[i].Tags = index.getByIDs(news.TagIds...)
-	}
+	newses.SetTags(NewTags(dbTags))
 
 	return newses, nil
-}
-
-func collectTagIDs(newses []db.News) []int {
-	tagIDs := make([]int, 0, len(newses))
-	for _, news := range newses {
-		tagIDs = append(tagIDs, news.TagIDs...)
-	}
-
-	return tagIDs
-}
-
-type tagsIndex map[int]Tag
-
-func (i tagsIndex) getByIDs(ids ...int) []Tag {
-	tags := make([]Tag, 0, len(ids))
-
-	for _, id := range ids {
-		tag := Tag{ID: id}
-
-		if _, ok := i[id]; ok {
-			tag = i[id]
-		}
-
-		tags = append(tags, tag)
-	}
-
-	return tags
-}
-
-func newTagsIndex(tags []db.Tag) tagsIndex {
-	index := make(map[int]Tag, len(tags))
-
-	for _, tag := range tags {
-		index[tag.ID] = NewTag(tag)
-	}
-
-	return index
 }

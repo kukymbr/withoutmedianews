@@ -15,6 +15,8 @@ require (
 )
 
 require (
+	github.com/BurntSushi/toml v1.5.0 // indirect
+	github.com/anthropics/anthropic-sdk-go v0.2.0-beta.3 // indirect
 	github.com/apapsch/go-jsonmerge/v2 v2.0.0 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
@@ -24,6 +26,7 @@ require (
 	github.com/dizzyfool/genna v1.2.0 // indirect
 	github.com/dprotaso/go-yit v0.0.0-20220510233725-9ba8df137936 // indirect
 	github.com/fatih/camelcase v1.0.0 // indirect
+	github.com/go-deepseek/deepseek v0.8.0 // indirect
 	github.com/go-openapi/jsonpointer v0.21.0 // indirect
 	github.com/go-openapi/swag v0.23.0 // indirect
 	github.com/go-pg/zerochecker v0.2.0 // indirect
@@ -53,11 +56,16 @@ require (
 	github.com/speakeasy-api/openapi-overlay v0.10.2 // indirect
 	github.com/spf13/cobra v1.9.1 // indirect
 	github.com/spf13/pflag v1.0.7 // indirect
+	github.com/tidwall/gjson v1.14.4 // indirect
+	github.com/tidwall/match v1.1.1 // indirect
+	github.com/tidwall/pretty v1.2.1 // indirect
+	github.com/tidwall/sjson v1.2.5 // indirect
 	github.com/tmthrgd/go-hex v0.0.0-20190904060850-447a3041c3bc // indirect
 	github.com/vmihailenco/bufpool v0.1.11 // indirect
 	github.com/vmihailenco/msgpack/v5 v5.4.1 // indirect
 	github.com/vmihailenco/tagparser v0.1.2 // indirect
 	github.com/vmihailenco/tagparser/v2 v2.0.0 // indirect
+	github.com/vmkteam/colgen v0.1.2 // indirect
 	github.com/vmkteam/mfd-generator v0.5.1 // indirect
 	github.com/vmkteam/zenrpc/v2 v2.2.12 // indirect
 	github.com/vmware-labs/yaml-jsonpath v0.3.2 // indirect
@@ -77,5 +85,6 @@ require (
 tool (
 	github.com/dizzyfool/genna
 	github.com/oapi-codegen/oapi-codegen/v2/cmd/oapi-codegen
+	github.com/vmkteam/colgen/cmd/colgen
 	github.com/vmkteam/mfd-generator
 )
