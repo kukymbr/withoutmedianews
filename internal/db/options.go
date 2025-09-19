@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"time"
 	"unicode"
 
 	"github.com/go-pg/pg/v10"
@@ -111,6 +112,15 @@ func WithTable(table string) OpFunc {
 func EnabledOnly() OpFunc {
 	return func(query *orm.Query) {
 		Filter{Field: "statusId", Value: StatusEnabled}.Apply(query)
+	}
+}
+
+func AlreadyPublished() OpFunc {
+	return func(query *orm.Query) {
+		now := time.Now()
+		search := &NewsSearch{PublishedBefore: &now}
+
+		search.Apply(query)
 	}
 }
 

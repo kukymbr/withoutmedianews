@@ -48,7 +48,10 @@ type News struct {
 
 	// ShortText Preamble of the postamble
 	ShortText string `json:"short_text"`
-	Tags      []Tag  `json:"tags"`
+
+	// TagIds News tags IDs
+	TagIds []int `json:"tag_ids,omitempty,omitzero"`
+	Tags   []Tag `json:"tags"`
 
 	// Title News title
 	Title string `json:"title"`

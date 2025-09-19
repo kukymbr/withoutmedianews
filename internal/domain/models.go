@@ -5,21 +5,26 @@ import (
 	"github.com/kukymbr/withoutmedianews/internal/pkg/sqlvalues"
 )
 
-func NewNews(dto db.News) News {
-	category := Category{}
+func NewNewses(dtos []db.News) []News {
+	newses := make([]News, len(dtos))
 
-	if dto.Category != nil {
-		category = NewCategory(*dto.Category)
+	for i, dto := range dtos {
+		newses[i] = NewNews(dto)
 	}
 
+	return newses
+}
+
+func NewNews(dto db.News) News {
 	return News{
 		ID:          dto.ID,
 		Title:       dto.Title,
 		Author:      sqlvalues.PtrToValue(dto.Author),
 		ShortText:   dto.ShortText,
 		Content:     sqlvalues.PtrToValue(dto.Content),
-		Category:    category,
+		Category:    NewCategory(sqlvalues.PtrToValue(dto.Category)),
 		PublishedAt: dto.PublishedAt,
+		TagIds:      dto.TagIDs,
 	}
 }
 

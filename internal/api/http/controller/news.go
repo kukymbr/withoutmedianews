@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"github.com/kukymbr/withoutmedianews/internal/api/http"
-	"github.com/kukymbr/withoutmedianews/internal/db"
 	"github.com/kukymbr/withoutmedianews/internal/domain"
 )
 
@@ -26,10 +25,8 @@ func (c *NewsController) GetNewses(
 		ctx,
 		req.Params.CategoryID,
 		req.Params.TagID,
-		db.PaginationReq{
-			Page:    req.Params.Page,
-			PerPage: req.Params.PerPage,
-		},
+		req.Params.Page,
+		req.Params.PerPage,
 	)
 	if err != nil {
 		return nil, err

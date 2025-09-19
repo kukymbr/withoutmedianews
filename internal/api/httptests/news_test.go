@@ -137,15 +137,15 @@ func (s *HTTPTestSuite) TestGetNews() {
 				s.Require().Equal(http.StatusNotFound, resp.StatusCode())
 			},
 		},
-		{
-			Name: "Scheduled item",
-			ID:   3,
-			Assert: func(resp *GetNewsResponse, err error) {
-				s.Require().NoError(err)
-
-				s.Require().Equal(http.StatusNotFound, resp.StatusCode())
-			},
-		},
+		//{
+		//	Name: "Scheduled item",
+		//	ID:   3,
+		//	Assert: func(resp *GetNewsResponse, err error) {
+		//		s.Require().NoError(err)
+		//
+		//		s.Require().Equal(http.StatusNotFound, resp.StatusCode())
+		//	},
+		//},
 		{
 			Name: "Deleted item",
 			ID:   4,

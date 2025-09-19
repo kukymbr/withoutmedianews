@@ -7,37 +7,67 @@ import (
 	"github.com/kukymbr/withoutmedianews/internal/db"
 )
 
-func NewNewsService(repo *db.NewsRepository) *Service {
+func NewNewsService(repo *db.NewsRepo) *Service {
 	return &Service{
 		repo: repo,
 	}
 }
 
 type Service struct {
-	repo *db.NewsRepository
+	repo *db.NewsRepo
 }
 
 func (s *Service) GetList(
 	ctx context.Context,
 	categoryID int,
 	tagID int,
-	page db.PaginationReq,
+	page, perPage int,
 ) ([]News, error) {
-	items, err := s.repo.GetList(ctx, categoryID, tagID, page)
+	// TODO: nils
+	search := db.NewsSearch{}
+	if categoryID > 0 {
+		search.CategoryID = &categoryID
+	}
+
+	if tagID > 0 {
+		search.TagID = &tagID
+	}
+
+	items, err := s.repo.NewsByFilters(
+		ctx,
+		&search,
+		db.NewPager(page, perPage),
+		db.EnabledOnly(),
+		db.AlreadyPublished(),
+		db.WithColumns(db.Columns.News.Category),
+	)
 	if err != nil {
 		return nil, fmt.Errorf("read news list: %w", err)
 	}
 
-	return s.newNewses(ctx, items)
+	tagIDs := collectTagIDs(items)
+	newses := NewNewses(items)
+
+	return s.enrichNewsesWithTags(ctx, newses, tagIDs)
 }
 
 func (s *Service) GetNews(ctx context.Context, id int) (News, error) {
-	item, err := s.repo.GetNews(ctx, id)
+	dto, err := s.repo.OneNews(
+		ctx,
+		&db.NewsSearch{ID: &id},
+		db.EnabledOnly(),
+		db.AlreadyPublished(),
+		db.WithColumns(db.Columns.News.Category),
+	)
 	if err != nil {
 		return News{}, fmt.Errorf("read news item: %w", err)
 	}
 
-	list, err := s.newNewses(ctx, []db.News{item})
+	if dto == nil {
+		return News{}, ErrNotFound
+	}
+
+	list, err := s.enrichNewsesWithTags(ctx, []News{NewNews(*dto)}, dto.TagIDs)
 	if err != nil {
 		return News{}, err
 	}
@@ -46,7 +76,16 @@ func (s *Service) GetNews(ctx context.Context, id int) (News, error) {
 }
 
 func (s *Service) GetCount(ctx context.Context, categoryID int, tagID int) (int, error) {
-	count, err := s.repo.CountNews(ctx, categoryID, tagID)
+	search := db.NewsSearch{}
+	if categoryID > 0 {
+		search.CategoryID = &categoryID
+	}
+
+	if tagID > 0 {
+		search.TagID = &tagID
+	}
+
+	count, err := s.repo.CountNews(ctx, &search, db.EnabledOnly())
 	if err != nil {
 		return 0, err
 	}
@@ -55,7 +94,7 @@ func (s *Service) GetCount(ctx context.Context, categoryID int, tagID int) (int,
 }
 
 func (s *Service) GetCategories(ctx context.Context) ([]Category, error) {
-	categories, err := s.repo.ReadCategories(ctx)
+	categories, err := s.repo.CategoriesByFilters(ctx, nil, db.PagerNoLimit, db.EnabledOnly())
 	if err != nil {
 		return nil, fmt.Errorf("read categories from repo: %w", err)
 	}
@@ -64,7 +103,7 @@ func (s *Service) GetCategories(ctx context.Context) ([]Category, error) {
 }
 
 func (s *Service) GetTags(ctx context.Context) ([]Tag, error) {
-	tags, err := s.repo.ReadTags(ctx, nil)
+	tags, err := s.repo.TagsByFilters(ctx, nil, db.PagerNoLimit, db.EnabledOnly())
 	if err != nil {
 		return nil, fmt.Errorf("read tags from repo: %w", err)
 	}
@@ -72,45 +111,53 @@ func (s *Service) GetTags(ctx context.Context) ([]Tag, error) {
 	return NewTags(tags), nil
 }
 
-func (s *Service) newNewses(ctx context.Context, items []db.News) ([]News, error) {
-	if len(items) == 0 {
+func (s *Service) enrichNewsesWithTags(ctx context.Context, newses []News, tagIDs []int) ([]News, error) {
+	if len(newses) == 0 {
 		return nil, nil
 	}
 
-	tagIDs := make([]int, 0, len(items))
-	for _, item := range items {
-		tagIDs = append(tagIDs, item.TagIDs...)
-	}
-
-	tags, err := s.repo.ReadTags(ctx, tagIDs)
+	tags, err := s.repo.TagsByFilters(ctx, &db.TagSearch{IDs: tagIDs}, db.PagerNoLimit, db.EnabledOnly())
 	if err != nil {
 		return nil, err
 	}
 
-	newses := make([]News, 0, len(items))
 	index := newTagsIndex(tags)
 
-	for _, dto := range items {
-		news := NewNews(dto)
-		tags := make([]Tag, 0, len(dto.TagIDs))
-
-		for _, tagID := range dto.TagIDs {
-			tag := Tag{ID: tagID}
-			if t, ok := index[tag.ID]; ok {
-				tag = t
-			}
-
-			tags = append(tags, tag)
-		}
-
-		news.Tags = tags
-		newses = append(newses, news)
+	for i, news := range newses {
+		newses[i].Tags = index.getByIDs(news.TagIds...)
 	}
 
 	return newses, nil
 }
 
-func newTagsIndex(tags []db.Tag) map[int]Tag {
+func collectTagIDs(newses []db.News) []int {
+	tagIDs := make([]int, 0, len(newses))
+	for _, news := range newses {
+		tagIDs = append(tagIDs, news.TagIDs...)
+	}
+
+	return tagIDs
+}
+
+type tagsIndex map[int]Tag
+
+func (i tagsIndex) getByIDs(ids ...int) []Tag {
+	tags := make([]Tag, 0, len(ids))
+
+	for _, id := range ids {
+		tag := Tag{ID: id}
+
+		if _, ok := i[id]; ok {
+			tag = i[id]
+		}
+
+		tags = append(tags, tag)
+	}
+
+	return tags
+}
+
+func newTagsIndex(tags []db.Tag) tagsIndex {
 	index := make(map[int]Tag, len(tags))
 
 	for _, tag := range tags {

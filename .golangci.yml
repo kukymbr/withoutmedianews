@@ -56,7 +56,7 @@ linters:
       - ^internal/db/model_search\.go$
       - ^internal/db/model_validate\.go$
       - ^internal/db/options\.go$
-      - ^internal/db/withoutmedianews\.go$
+      - ^internal/db/news\.go$
 formatters:
   exclusions:
     generated: lax

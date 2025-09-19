@@ -67,7 +67,8 @@ func initDatabase(ctn *Container, ctx context.Context) error {
 }
 
 func initRepositories(ctn *Container) {
-	ctn.newsRepo = db.NewNewsRepository(ctn.db.DB())
+	repo := db.NewNewsRepo(ctn.db.DB())
+	ctn.newsRepo = &repo
 }
 
 func initServices(ctn *Container) {
@@ -102,7 +103,7 @@ type Container struct {
 	logger *zap.Logger
 	db     *dbkit.Database
 
-	newsRepo    *db.NewsRepository
+	newsRepo    *db.NewsRepo
 	newsService *domain.Service
 
 	errResponder *server.ErrorResponder

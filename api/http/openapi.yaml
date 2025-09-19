@@ -190,6 +190,11 @@ components:
           example: Bob the Cat
         category:
           $ref: "#/components/schemas/Category"
+        tag_ids:
+          description: News tags IDs
+          type: array
+          items:
+            type: integer
         tags:
           type: array
           items:
