@@ -24,7 +24,7 @@ build:
 	go build $(GO_BUILD_ARGS) -o bin/withoutmedianews ./cmd/withoutmedianews
 
 generate:
-	GENNA_DATABASE_DSN=$(DB_DSN) go generate ./...
+	go generate ./...
 	go mod tidy
 
 generate_genna:

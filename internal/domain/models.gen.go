@@ -69,6 +69,12 @@ type TagID = int
 // DefaultError defines model for DefaultError.
 type DefaultError = APIError
 
+// NotFound defines model for NotFound.
+type NotFound = APIError
+
+// UnprocessableEntity defines model for UnprocessableEntity.
+type UnprocessableEntity = APIError
+
 // GetNewsesParams defines parameters for GetNewses.
 type GetNewsesParams struct {
 	// CategoryID Filter by category ID

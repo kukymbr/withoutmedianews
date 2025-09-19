@@ -78,6 +78,12 @@ type TagID = int
 // DefaultError defines model for DefaultError.
 type DefaultError = APIError
 
+// NotFound defines model for NotFound.
+type NotFound = APIError
+
+// UnprocessableEntity defines model for UnprocessableEntity.
+type UnprocessableEntity = APIError
+
 // GetNewsesParams defines parameters for GetNewses.
 type GetNewsesParams struct {
 	// CategoryID Filter by category ID
@@ -611,6 +617,8 @@ type GetNewsResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *News
+	JSON404      *NotFound
+	JSON422      *UnprocessableEntity
 	JSONDefault  *DefaultError
 }
 
@@ -820,6 +828,20 @@ func ParseGetNewsResponse(rsp *http.Response) (*GetNewsResponse, error) {
 		}
 		response.JSON200 = &dest
 
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest NotFound
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest UnprocessableEntity
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON422 = &dest
+
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
 		var dest DefaultError
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
@@ -866,3 +888,7 @@ func ParseGetTagsResponse(rsp *http.Response) (*GetTagsResponse, error) {
 }
 
 type DefaultErrorJSONResponse APIError
+
+type NotFoundJSONResponse APIError
+
+type UnprocessableEntityJSONResponse APIError
