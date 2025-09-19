@@ -7,39 +7,27 @@ import (
 	"github.com/kukymbr/withoutmedianews/internal/db"
 )
 
-func NewNewsService(repo *db.NewsRepo) *Service {
+func NewNewsService(repo db.NewsRepo) *Service {
 	return &Service{
-		repo: repo,
+		repo: repo.WithEnabledOnly(),
 	}
 }
 
 type Service struct {
-	repo *db.NewsRepo
+	repo db.NewsRepo
 }
 
 func (s *Service) GetList(
 	ctx context.Context,
-	categoryID int,
-	tagID int,
+	filter NewsesFilter,
 	page, perPage int,
 ) ([]News, error) {
-	// TODO: nils
-	search := db.NewsSearch{}
-	if categoryID > 0 {
-		search.CategoryID = &categoryID
-	}
-
-	if tagID > 0 {
-		search.TagID = &tagID
-	}
-
 	items, err := s.repo.NewsByFilters(
 		ctx,
-		&search,
+		filter.toDBSearch(),
 		db.NewPager(page, perPage),
 		db.EnabledOnly(),
 		db.AlreadyPublished(),
-		// db.WithoutColumns(db.Columns.News.Content),
 		db.WithColumns(db.Columns.News.Category),
 	)
 	if err != nil {
@@ -76,17 +64,8 @@ func (s *Service) GetNews(ctx context.Context, id int) (News, error) {
 	return list[0], nil
 }
 
-func (s *Service) GetCount(ctx context.Context, categoryID int, tagID int) (int, error) {
-	search := db.NewsSearch{}
-	if categoryID > 0 {
-		search.CategoryID = &categoryID
-	}
-
-	if tagID > 0 {
-		search.TagID = &tagID
-	}
-
-	count, err := s.repo.CountNews(ctx, &search, db.EnabledOnly())
+func (s *Service) GetCount(ctx context.Context, filter NewsesFilter) (int, error) {
+	count, err := s.repo.CountNews(ctx, filter.toDBSearch(), db.EnabledOnly())
 	if err != nil {
 		return 0, err
 	}

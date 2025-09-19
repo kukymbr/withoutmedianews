@@ -72,7 +72,7 @@ func initRepositories(ctn *Container) {
 }
 
 func initServices(ctn *Container) {
-	ctn.newsService = domain.NewNewsService(ctn.newsRepo)
+	ctn.newsService = domain.NewNewsService(*ctn.newsRepo)
 }
 
 func initServer(ctn *Container, ctx context.Context) {

@@ -2,7 +2,7 @@ package domain
 
 import (
 	"github.com/kukymbr/withoutmedianews/internal/db"
-	"github.com/kukymbr/withoutmedianews/internal/pkg/sqlvalues"
+	"github.com/kukymbr/withoutmedianews/internal/pkg/ptrs"
 )
 
 func NewNewses(dtos []db.News) []News {
@@ -19,10 +19,10 @@ func NewNews(dto db.News) News {
 	return News{
 		ID:          dto.ID,
 		Title:       dto.Title,
-		Author:      sqlvalues.PtrToValue(dto.Author),
+		Author:      ptrs.PtrToValue(dto.Author),
 		ShortText:   dto.ShortText,
-		Content:     sqlvalues.PtrToValue(dto.Content),
-		Category:    NewCategory(sqlvalues.PtrToValue(dto.Category)),
+		Content:     ptrs.PtrToValue(dto.Content),
+		Category:    NewCategory(ptrs.PtrToValue(dto.Category)),
 		PublishedAt: dto.PublishedAt,
 		TagIds:      dto.TagIDs,
 	}

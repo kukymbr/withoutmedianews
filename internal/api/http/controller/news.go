@@ -23,8 +23,7 @@ func (c *NewsController) GetNewses(
 ) (apihttp.GetNewsesResponseObject, error) {
 	items, err := c.service.GetList(
 		ctx,
-		req.Params.CategoryID,
-		req.Params.TagID,
+		domain.NewNewsesFilter(req.Params.CategoryID, req.Params.TagID),
 		req.Params.Page,
 		req.Params.PerPage,
 	)
@@ -55,9 +54,11 @@ func (c *NewsController) GetNews(
 
 func (c *NewsController) GetNewsCount(
 	ctx context.Context,
-	request apihttp.GetNewsCountRequestObject,
+	req apihttp.GetNewsCountRequestObject,
 ) (apihttp.GetNewsCountResponseObject, error) {
-	count, err := c.service.GetCount(ctx, request.Params.CategoryID, request.Params.TagID)
+	count, err := c.service.GetCount(
+		ctx, domain.NewNewsesFilter(req.Params.CategoryID, req.Params.TagID),
+	)
 	if err != nil {
 		return nil, err
 	}

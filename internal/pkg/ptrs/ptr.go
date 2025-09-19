@@ -1,4 +1,4 @@
-package sqlvalues
+package ptrs
 
 func PtrToValue[T any](ptr *T) T {
 	var empty T
