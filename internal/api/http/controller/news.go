@@ -1,11 +1,11 @@
 package controller
 
 import (
-	"context"
+	"net/http"
 
 	"github.com/kukymbr/withoutmedianews/internal/api/http"
 	"github.com/kukymbr/withoutmedianews/internal/domain"
-	"github.com/kukymbr/withoutmedianews/internal/pkg/ptrs"
+	"github.com/labstack/echo/v4"
 )
 
 func NewNewsController(service *domain.Service) *NewsController {
@@ -18,106 +18,57 @@ type NewsController struct {
 	service *domain.Service
 }
 
-func (c *NewsController) GetNewses(
-	ctx context.Context,
-	req apihttp.GetNewsesRequestObject,
-) (apihttp.GetNewsesResponseObject, error) {
-	items, err := c.service.GetList(
-		ctx,
-		domain.NewNewsesFilter(req.Params.CategoryID, req.Params.TagID),
-		req.Params.Page,
-		req.Params.PerPage,
+func (ctrl *NewsController) GetNewses(c echo.Context) error {
+	var req apihttp.NewsListReq
+	if err := c.Bind(&req); err != nil {
+		return err
+	}
+
+	items, err := ctrl.service.GetList(
+		c.Request().Context(),
+		domain.NewNewsesFilter(req.CategoryID, req.TagID),
+		req.Page,
+		req.PerPage,
 	)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	resp := make(apihttp.GetNewses200JSONResponse, 0, len(items))
+	// TODO: switch to summary
+	resp := apihttp.NewNewsList(items)
 
-	for _, item := range items {
-		resp = append(resp, newNewsListable(item))
-	}
-
-	return resp, nil
+	return c.JSON(http.StatusOK, resp)
 }
 
-func (c *NewsController) GetNews(
-	ctx context.Context,
-	request apihttp.GetNewsRequestObject,
-) (apihttp.GetNewsResponseObject, error) {
-	item, err := c.service.GetNews(ctx, request.ID)
+func (ctrl *NewsController) GetNews(c echo.Context) error {
+	var id int
+	if err := echo.PathParamsBinder(c).Int("id", &id).BindError(); err != nil {
+		return err
+	}
+
+	item, err := ctrl.service.GetNews(c.Request().Context(), id)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	return apihttp.GetNews200JSONResponse(newNews(item)), nil
+	resp := apihttp.NewNews(&item)
+
+	return c.JSON(http.StatusOK, resp)
 }
 
-func (c *NewsController) GetNewsCount(
-	ctx context.Context,
-	req apihttp.GetNewsCountRequestObject,
-) (apihttp.GetNewsCountResponseObject, error) {
-	count, err := c.service.GetCount(
-		ctx, domain.NewNewsesFilter(req.Params.CategoryID, req.Params.TagID),
+func (ctrl *NewsController) GetNewsCount(c echo.Context) error {
+	var req apihttp.NewsListReq
+	if err := c.Bind(&req); err != nil {
+		return err
+	}
+
+	count, err := ctrl.service.GetCount(
+		c.Request().Context(),
+		domain.NewNewsesFilter(req.CategoryID, req.TagID),
 	)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	return apihttp.GetNewsCount200JSONResponse{Count: count}, nil
-}
-
-func newCategory(dto *domain.Category) apihttp.Category {
-	if dto == nil {
-		return apihttp.Category{}
-	}
-
-	return apihttp.Category{
-		ID:    dto.ID,
-		Title: dto.Title,
-	}
-}
-
-func newTag(dto domain.Tag) apihttp.Tag {
-	return apihttp.Tag{
-		ID:   dto.ID,
-		Name: dto.Name,
-	}
-}
-
-func newTags(dtos []domain.Tag) []apihttp.Tag {
-	tags := make([]apihttp.Tag, 0, len(dtos))
-
-	for _, dto := range dtos {
-		tags = append(tags, newTag(dto))
-	}
-
-	return tags
-}
-
-func newNews(dto domain.News) apihttp.News {
-	return apihttp.News{
-		Author:      ptrs.PtrToValue(dto.Author),
-		Category:    newCategory(dto.Category),
-		Content:     ptrs.PtrToValue(dto.Content),
-		ID:          dto.ID,
-		PublishedAt: dto.PublishedAt,
-		ShortText:   dto.ShortText,
-		TagIds:      dto.TagIDs,
-		Tags:        newTags(dto.Tags),
-		Title:       dto.Title,
-	}
-}
-
-func newNewsListable(dto domain.News) apihttp.NewsListable {
-	return apihttp.NewsListable{
-		Author:      ptrs.PtrToValue(dto.Author),
-		Category:    newCategory(dto.Category),
-		ID:          dto.ID,
-		PublishedAt: dto.PublishedAt,
-		ShortText:   dto.ShortText,
-		TagIds:      dto.TagIDs,
-		Tags:        newTags(dto.Tags),
-		Title:       dto.Title,
-	}
+	return c.JSON(http.StatusOK, apihttp.NewsCountResponse{Count: count})
 }

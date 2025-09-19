@@ -16,13 +16,6 @@ func givenCategoryAccidents() Category {
 	}
 }
 
-func givenCategoryEvents() Category {
-	return Category{
-		ID:    4,
-		Title: "Events",
-	}
-}
-
 func givenNews1() News {
 	return News{
 		ID:        1,

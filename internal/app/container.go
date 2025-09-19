@@ -14,6 +14,7 @@ import (
 	"github.com/kukymbr/withoutmedianews/internal/db"
 	"github.com/kukymbr/withoutmedianews/internal/domain"
 	"github.com/kukymbr/withoutmedianews/internal/pkg/dbkit"
+	"github.com/labstack/echo/v4"
 	"go.uber.org/zap"
 
 	_ "github.com/jackc/pgx/v5/stdlib"
@@ -78,13 +79,13 @@ func initServices(ctn *Container) {
 func initServer(ctn *Container, ctx context.Context) {
 	ctn.errResponder = server.NewErrorResponder(ctn.logger)
 
-	ctn.server = &server.Server{
-		NewsController:       controller.NewNewsController(ctn.newsService),
-		CategoriesController: controller.NewCategoriesController(ctn.newsService),
-		TagsController:       controller.NewTagsController(ctn.newsService),
-	}
+	ctn.server = server.New(
+		controller.NewNewsController(ctn.newsService),
+		controller.NewCategoriesController(ctn.newsService),
+		controller.NewTagsController(ctn.newsService),
+	)
 
-	ctn.router = initRouter(ctn.server, ctn.errResponder)
+	ctn.router = server.NewRouter(ctn.server)
 
 	ctn.httpServer = &http.Server{
 		Addr:              ctn.config.API().Address(),
@@ -107,7 +108,7 @@ type Container struct {
 	newsService *domain.Service
 
 	errResponder *server.ErrorResponder
-	router       http.Handler
+	router       *echo.Echo
 	httpServer   *http.Server
 	server       *server.Server
 
@@ -115,7 +116,7 @@ type Container struct {
 	finalizer *depsFinalizer
 }
 
-func (ctn *Container) GetRouter() http.Handler {
+func (ctn *Container) GetRouter() *echo.Echo {
 	return ctn.router
 }
 

@@ -1,14 +1,13 @@
 package server
 
 import (
-	"encoding/json"
 	"errors"
 	"net/http"
 
 	"github.com/go-pg/pg/v10"
 	"github.com/kukymbr/withoutmedianews/internal/api/http"
 	"github.com/kukymbr/withoutmedianews/internal/domain"
-	"github.com/kukymbr/withoutmedianews/internal/pkg/logkit"
+	"github.com/labstack/echo/v4"
 	"go.uber.org/zap"
 )
 
@@ -22,45 +21,30 @@ type ErrorResponder struct {
 	logger *zap.Logger
 }
 
-func (r *ErrorResponder) APIError(resp http.ResponseWriter, req *http.Request, err error) {
+func (r *ErrorResponder) APIError(err error, c echo.Context) {
+	if c.Response().Committed {
+		return
+	}
+
+	code := getErrorCode(err)
 	errData := apihttp.APIError{
 		Message: err.Error(),
 	}
 
-	encoded, encodeErr := json.Marshal(errData)
-	if encodeErr != nil {
-		r.logger.Error("encoding error response", zap.Error(encodeErr))
+	if err := c.JSON(code, &errData); err != nil {
+		r.PlainText(err, c)
+	}
+}
 
-		r.PlainText(resp, req, encodeErr)
-
+func (r *ErrorResponder) PlainText(err error, c echo.Context) {
+	if c.Response().Committed {
 		return
 	}
 
-	resp.Header().Add("Content-Type", "application/json")
-
-	r.respond(resp, req, err, encoded)
-}
-
-func (r *ErrorResponder) PlainText(resp http.ResponseWriter, req *http.Request, err error) {
 	code := getErrorCode(err)
 	msg := http.StatusText(code) + ": " + err.Error()
 
-	resp.Header().Add("Content-Type", "text/plain")
-
-	r.respond(resp, req, err, []byte(msg))
-}
-
-func (r *ErrorResponder) respond(resp http.ResponseWriter, req *http.Request, err error, content []byte) {
-	code := getErrorCode(err)
-
-	logger := logkit.WithHTTPRequestFields(r.logger, req)
-	logger = logkit.WithHTTPResponseFields(logger, code)
-
-	logger.Warn("responding with error", zap.Error(err))
-
-	resp.WriteHeader(code)
-
-	_, _ = resp.Write(content)
+	_ = c.String(code, msg)
 }
 
 func getErrorCode(err error) int {

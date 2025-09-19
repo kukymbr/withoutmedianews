@@ -1,10 +1,11 @@
 package controller
 
 import (
-	"context"
+	"net/http"
 
 	apihttp "github.com/kukymbr/withoutmedianews/internal/api/http"
 	"github.com/kukymbr/withoutmedianews/internal/domain"
+	"github.com/labstack/echo/v4"
 )
 
 func NewTagsController(service *domain.Service) *TagsController {
@@ -17,14 +18,13 @@ type TagsController struct {
 	service *domain.Service
 }
 
-func (c *CategoriesController) GetTags(
-	ctx context.Context,
-	_ apihttp.GetTagsRequestObject,
-) (apihttp.GetTagsResponseObject, error) {
-	tags, err := c.service.GetTags(ctx)
+func (ctrl *TagsController) GetTags(c echo.Context) error {
+	tags, err := ctrl.service.GetTags(c.Request().Context())
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	return apihttp.GetTags200JSONResponse(apihttp.NewTags(tags)), nil
+	resp := apihttp.NewTags(tags)
+
+	return c.JSON(http.StatusOK, resp)
 }

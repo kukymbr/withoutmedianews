@@ -1,10 +1,11 @@
 package controller
 
 import (
-	"context"
+	"net/http"
 
 	apihttp "github.com/kukymbr/withoutmedianews/internal/api/http"
 	"github.com/kukymbr/withoutmedianews/internal/domain"
+	"github.com/labstack/echo/v4"
 )
 
 func NewCategoriesController(service *domain.Service) *CategoriesController {
@@ -17,23 +18,13 @@ type CategoriesController struct {
 	service *domain.Service
 }
 
-func (c *CategoriesController) GetCategories(
-	ctx context.Context,
-	_ apihttp.GetCategoriesRequestObject,
-) (apihttp.GetCategoriesResponseObject, error) {
-	categories, err := c.service.GetCategories(ctx)
+func (ctrl *CategoriesController) GetCategories(c echo.Context) error {
+	categories, err := ctrl.service.GetCategories(c.Request().Context())
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	resp := make(apihttp.GetCategories200JSONResponse, 0, len(categories))
+	resp := apihttp.NewCategories(categories)
 
-	for _, category := range categories {
-		resp = append(resp, apihttp.Category{
-			ID:    category.ID,
-			Title: category.Title,
-		})
-	}
-
-	return resp, nil
+	return c.JSON(http.StatusOK, resp)
 }
