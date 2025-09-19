@@ -26,7 +26,6 @@ func (s *Service) GetList(
 		ctx,
 		filter.toDBSearch(),
 		db.NewPager(page, perPage),
-		db.EnabledOnly(),
 		db.AlreadyPublished(),
 		db.WithColumns(db.Columns.News.Category),
 	)
@@ -65,7 +64,7 @@ func (s *Service) GetNews(ctx context.Context, id int) (News, error) {
 }
 
 func (s *Service) GetCount(ctx context.Context, filter NewsesFilter) (int, error) {
-	count, err := s.repo.CountNews(ctx, filter.toDBSearch(), db.EnabledOnly())
+	count, err := s.repo.CountNews(ctx, filter.toDBSearch())
 	if err != nil {
 		return 0, err
 	}
@@ -74,7 +73,7 @@ func (s *Service) GetCount(ctx context.Context, filter NewsesFilter) (int, error
 }
 
 func (s *Service) GetCategories(ctx context.Context) ([]Category, error) {
-	categories, err := s.repo.CategoriesByFilters(ctx, nil, db.PagerNoLimit, db.EnabledOnly())
+	categories, err := s.repo.CategoriesByFilters(ctx, nil, db.PagerNoLimit)
 	if err != nil {
 		return nil, fmt.Errorf("read categories from repo: %w", err)
 	}
@@ -83,7 +82,7 @@ func (s *Service) GetCategories(ctx context.Context) ([]Category, error) {
 }
 
 func (s *Service) GetTags(ctx context.Context) ([]Tag, error) {
-	tags, err := s.repo.TagsByFilters(ctx, nil, db.PagerNoLimit, db.EnabledOnly())
+	tags, err := s.repo.TagsByFilters(ctx, nil, db.PagerNoLimit)
 	if err != nil {
 		return nil, fmt.Errorf("read tags from repo: %w", err)
 	}
@@ -96,7 +95,7 @@ func (s *Service) enrichNewsesWithTags(ctx context.Context, newses []News, tagID
 		return nil, nil
 	}
 
-	tags, err := s.repo.TagsByFilters(ctx, &db.TagSearch{IDs: tagIDs}, db.PagerNoLimit, db.EnabledOnly())
+	tags, err := s.repo.TagsByFilters(ctx, &db.TagSearch{IDs: tagIDs}, db.PagerNoLimit)
 	if err != nil {
 		return nil, err
 	}
