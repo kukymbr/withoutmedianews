@@ -4,6 +4,7 @@ go 1.24.0
 
 require (
 	github.com/caarlos0/env/v11 v11.3.1
+	github.com/getkin/kin-openapi v0.132.0
 	github.com/go-pg/pg/v10 v10.15.0
 	github.com/go-pg/urlstruct v1.0.1
 	github.com/jackc/pgx/v5 v5.7.6
@@ -26,7 +27,6 @@ require (
 	github.com/dizzyfool/genna v1.2.0 // indirect
 	github.com/dprotaso/go-yit v0.0.0-20220510233725-9ba8df137936 // indirect
 	github.com/fatih/camelcase v1.0.0 // indirect
-	github.com/getkin/kin-openapi v0.132.0 // indirect
 	github.com/go-deepseek/deepseek v0.8.0 // indirect
 	github.com/go-openapi/jsonpointer v0.21.0 // indirect
 	github.com/go-openapi/swag v0.23.0 // indirect

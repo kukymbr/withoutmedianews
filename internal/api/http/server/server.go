@@ -23,6 +23,8 @@ func NewRouter(srv *Server) *echo.Echo {
 	v1.GET("/categories", srv.categories.GetCategories)
 	v1.GET("/tags", srv.tags.GetTags)
 
+	router.GET("/openapi.yaml", handleSpecRequest)
+
 	return router
 }
 
