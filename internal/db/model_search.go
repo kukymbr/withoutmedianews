@@ -117,6 +117,7 @@ type NewsSearch struct {
 	ShortTextILike *string
 	ContentILike   *string
 	AuthorILike    *string
+	TagID          *int
 }
 
 func (ns *NewsSearch) Apply(query *orm.Query) *orm.Query {
@@ -164,6 +165,9 @@ func (ns *NewsSearch) Apply(query *orm.Query) *orm.Query {
 	}
 	if ns.AuthorILike != nil {
 		Filter{Columns.News.Author, *ns.AuthorILike, SearchTypeILike, false}.Apply(query)
+	}
+	if ns.TagID != nil {
+		Filter{Columns.News.TagIDs, *ns.TagID, SearchTypeArrayContains, false}.Apply(query)
 	}
 
 	ns.apply(query)

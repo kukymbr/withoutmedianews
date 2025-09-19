@@ -1,7 +1,7 @@
 <Package xmlns:xsi="" xmlns:xsd="">
-    <Name>withoutmedianews</Name>
+    <Name>news</Name>
     <Entities>
-        <Entity Name="Category" Namespace="withoutmedianews" Table="categories">
+        <Entity Name="Category" Namespace="news" Table="categories">
             <Attributes>
                 <Attribute Name="ID" DBName="categoryId" DBType="int4" GoType="int" PK="true" Nullable="Yes" Addable="true" Updatable="false" Min="0" Max="0"></Attribute>
                 <Attribute Name="Title" DBName="title" DBType="varchar" GoType="string" PK="false" Nullable="No" Addable="true" Updatable="true" Min="0" Max="255"></Attribute>
@@ -13,7 +13,7 @@
                 <Search Name="TitleILike" AttrName="Title" SearchType="SEARCHTYPE_ILIKE"></Search>
             </Searches>
         </Entity>
-        <Entity Name="News" Namespace="withoutmedianews" Table="news">
+        <Entity Name="News" Namespace="news" Table="news">
             <Attributes>
                 <Attribute Name="ID" DBName="newsId" DBType="int4" GoType="int" PK="true" Nullable="Yes" Addable="true" Updatable="false" Min="0" Max="0"></Attribute>
                 <Attribute Name="Title" DBName="title" DBType="varchar" GoType="string" PK="false" Nullable="No" Addable="true" Updatable="true" Min="0" Max="255"></Attribute>
@@ -32,9 +32,10 @@
                 <Search Name="ShortTextILike" AttrName="ShortText" SearchType="SEARCHTYPE_ILIKE"></Search>
                 <Search Name="ContentILike" AttrName="Content" SearchType="SEARCHTYPE_ILIKE"></Search>
                 <Search Name="AuthorILike" AttrName="Author" SearchType="SEARCHTYPE_ILIKE"></Search>
+                <Search Name="TagID" AttrName="TagIDs" SearchType="SEARCHTYPE_ARRAY_CONTAINS"></Search>
             </Searches>
         </Entity>
-        <Entity Name="Tag" Namespace="withoutmedianews" Table="tags">
+        <Entity Name="Tag" Namespace="news" Table="tags">
             <Attributes>
                 <Attribute Name="ID" DBName="tagId" DBType="int4" GoType="int" PK="true" Nullable="Yes" Addable="true" Updatable="false" Min="0" Max="0"></Attribute>
                 <Attribute Name="Name" DBName="name" DBType="varchar" GoType="string" PK="false" Nullable="No" Addable="true" Updatable="true" Min="0" Max="64"></Attribute>

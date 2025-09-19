@@ -1,7 +1,7 @@
 <Project xmlns:xsi="" xmlns:xsd="">
     <Name>withoutmedianews.mfd</Name>
     <PackageNames>
-        <string>withoutmedianews</string>
+        <string>news</string>
     </PackageNames>
     <Languages>
         <string>en</string>

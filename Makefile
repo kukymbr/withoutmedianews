@@ -49,7 +49,7 @@ run_dev_deps:
 	docker compose -f ./.deps/compose.yml up -d dev_database
 
 mfd-xml:
-	go tool mfd-generator xml -c "$(DB_DSN)" -m ./db/model/withoutmedianews.mfd -n withoutmedianews
+	go tool mfd-generator xml -c "$(DB_DSN)" -m ./db/model/withoutmedianews.mfd -n news
 
 mfd-model:
 	go tool mfd-generator model -m ./db/model/withoutmedianews.mfd -p db -o ./internal/db
