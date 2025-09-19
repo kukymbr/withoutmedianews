@@ -35,16 +35,7 @@ func (c *NewsController) GetNewses(
 	resp := make(apihttp.GetNewses200JSONResponse, 0, len(items))
 
 	for _, item := range items {
-		resp = append(resp, apihttp.News{
-			Author:      item.Author,
-			Category:    apihttp.Category(item.Category),
-			Content:     item.Content,
-			ID:          item.ID,
-			PublishedAt: item.PublishedAt,
-			ShortText:   item.ShortText,
-			Tags:        apihttp.NewTags(item.Tags),
-			Title:       item.Title,
-		})
+		resp = append(resp, newNewsListable(item))
 	}
 
 	return resp, nil
@@ -59,16 +50,7 @@ func (c *NewsController) GetNews(
 		return nil, err
 	}
 
-	return apihttp.GetNews200JSONResponse{
-		Author:      item.Author,
-		Category:    apihttp.Category(item.Category),
-		Content:     item.Content,
-		ID:          item.ID,
-		PublishedAt: item.PublishedAt,
-		ShortText:   item.ShortText,
-		Tags:        apihttp.NewTags(item.Tags),
-		Title:       item.Title,
-	}, nil
+	return apihttp.GetNews200JSONResponse(newNews(item)), nil
 }
 
 func (c *NewsController) GetNewsCount(
@@ -81,4 +63,55 @@ func (c *NewsController) GetNewsCount(
 	}
 
 	return apihttp.GetNewsCount200JSONResponse{Count: count}, nil
+}
+
+func newCategory(dto domain.Category) apihttp.Category {
+	return apihttp.Category{
+		ID:    dto.ID,
+		Title: dto.Title,
+	}
+}
+
+func newTag(dto domain.Tag) apihttp.Tag {
+	return apihttp.Tag{
+		ID:   dto.ID,
+		Name: dto.Name,
+	}
+}
+
+func newTags(dtos []domain.Tag) []apihttp.Tag {
+	tags := make([]apihttp.Tag, 0, len(dtos))
+
+	for _, dto := range dtos {
+		tags = append(tags, newTag(dto))
+	}
+
+	return tags
+}
+
+func newNews(dto domain.News) apihttp.News {
+	return apihttp.News{
+		Author:      dto.Author,
+		Category:    newCategory(dto.Category),
+		Content:     dto.Content,
+		ID:          dto.ID,
+		PublishedAt: dto.PublishedAt,
+		ShortText:   dto.ShortText,
+		TagIds:      dto.TagIds,
+		Tags:        newTags(dto.Tags),
+		Title:       dto.Title,
+	}
+}
+
+func newNewsListable(dto domain.News) apihttp.NewsListable {
+	return apihttp.NewsListable{
+		Author:      dto.Author,
+		Category:    newCategory(dto.Category),
+		ID:          dto.ID,
+		PublishedAt: dto.PublishedAt,
+		ShortText:   dto.ShortText,
+		TagIds:      dto.TagIds,
+		Tags:        newTags(dto.Tags),
+		Title:       dto.Title,
+	}
 }

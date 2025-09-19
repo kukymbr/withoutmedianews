@@ -45,8 +45,7 @@ paths:
               schema:
                 type: array
                 items:
-                  # TODO: add separated type for a list response items with no content included.
-                  $ref: "#/components/schemas/News"
+                  $ref: "#/components/schemas/NewsListable"
         default:
           $ref: "#/components/responses/DefaultError"
   /newses/count:
@@ -167,7 +166,7 @@ components:
       required:
         - id
         - name
-    News:
+    NewsBase:
       type: object
       properties:
         id:
@@ -181,9 +180,6 @@ components:
           type: string
           maxLength: 1024
           description: Preamble of the postamble
-        content:
-          type: string
-          description: Main content of the news article
         author:
           type: string
           description: Name of the article author
@@ -209,6 +205,18 @@ components:
         - author
         - category
         - tags
+    NewsListable:
+      $ref: "#/components/schemas/NewsBase"
+    News:
+      allOf:
+        - $ref: "#/components/schemas/NewsBase"
+        - type: object
+          properties:
+            content:
+              type: string
+              description: Main content of the news article
+          required:
+            - content
     APIError:
       type: object
       properties:

@@ -40,7 +40,7 @@ type News struct {
 	Category Category `json:"category"`
 
 	// Content Main content of the news article
-	Content string `json:"content,omitempty,omitzero"`
+	Content string `json:"content"`
 
 	// ID Numeric ID value
 	ID          NumericID `json:"id"`
@@ -56,6 +56,32 @@ type News struct {
 	// Title News title
 	Title string `json:"title"`
 }
+
+// NewsBase defines model for NewsBase.
+type NewsBase struct {
+	// Author Name of the article author
+	Author string `json:"author"`
+
+	// Category Category of the news
+	Category Category `json:"category"`
+
+	// ID Numeric ID value
+	ID          NumericID `json:"id"`
+	PublishedAt Timestamp `json:"published_at,omitempty,omitzero"`
+
+	// ShortText Preamble of the postamble
+	ShortText string `json:"short_text"`
+
+	// TagIds News tags IDs
+	TagIds []int `json:"tag_ids,omitempty,omitzero"`
+	Tags   []Tag `json:"tags"`
+
+	// Title News title
+	Title string `json:"title"`
+}
+
+// NewsListable defines model for NewsListable.
+type NewsListable = NewsBase
 
 // NumericID Numeric ID value
 type NumericID = int
@@ -571,7 +597,7 @@ func (r GetCategoriesResponse) StatusCode() int {
 type GetNewsesResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
-	JSON200      *[]News
+	JSON200      *[]NewsListable
 	JSONDefault  *DefaultError
 }
 
@@ -757,7 +783,7 @@ func ParseGetNewsesResponse(rsp *http.Response) (*GetNewsesResponse, error) {
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest []News
+		var dest []NewsListable
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
